@@ -12,7 +12,12 @@ function parseName(name: string) {
   return m ? { main: m[1].trim(), sub: m[2].trim() } : { main: name, sub: null }
 }
 
-function MapController({ items, focusedItemId, visible }: { items: Item[]; focusedItemId: string | null; visible: boolean }) {
+function MapController({ items, focusedItemId, visible, markerRefs }: {
+  items: Item[]
+  focusedItemId: string | null
+  visible: boolean
+  markerRefs: React.RefObject<Map<string, L.Marker>>
+}) {
   const map = useMap()
   const listKeyRef = useRef('')
   const focusedItemIdRef = useRef(focusedItemId)
@@ -23,8 +28,6 @@ function MapController({ items, focusedItemId, visible }: { items: Item[]; focus
 
   useEffect(() => {
     if (!visible) return
-    // After map becomes visible, invalidate size then re-apply any pending focus.
-    // This fixes mobile: setView was firing before invalidateSize when switching from list→map.
     const t = setTimeout(() => {
       map.invalidateSize()
       const fid = focusedItemIdRef.current
@@ -32,11 +35,12 @@ function MapController({ items, focusedItemId, visible }: { items: Item[]; focus
         const item = itemsRef.current.find(i => i.id === fid)
         if (item?.lat && item?.lng) {
           map.setView([item.lat, item.lng], Math.max(map.getZoom(), 15), { animate: true })
+          markerRefs.current?.get(fid)?.openPopup()
         }
       }
     }, 60)
     return () => clearTimeout(t)
-  }, [visible, map])
+  }, [visible, map, markerRefs])
 
   useEffect(() => {
     const withCoords = items.filter(i => i.lat != null && i.lng != null)
@@ -54,7 +58,8 @@ function MapController({ items, focusedItemId, visible }: { items: Item[]; focus
     const item = items.find(i => i.id === focusedItemId)
     if (!item?.lat || !item?.lng) return
     map.setView([item.lat, item.lng], Math.max(map.getZoom(), 15), { animate: true })
-  }, [focusedItemId, items, map])
+    markerRefs.current?.get(focusedItemId)?.openPopup()
+  }, [focusedItemId, items, map, markerRefs])
 
   return null
 }
@@ -62,6 +67,8 @@ function MapController({ items, focusedItemId, visible }: { items: Item[]; focus
 export default function MapView({ items, focusedItemId, fullHeight, visible = true }: { items: Item[]; focusedItemId: string | null; fullHeight?: boolean; visible?: boolean }) {
   const withCoords = items.filter(i => i.lat != null && i.lng != null)
   const center: [number, number] = withCoords.length > 0 ? [withCoords[0].lat!, withCoords[0].lng!] : [35.158, 129.059]
+
+  const markerRefs = useRef<Map<string, L.Marker>>(new Map())
 
   const typeIcons = useMemo(() => {
     const result: Partial<Record<string, L.DivIcon>> = {}
@@ -85,13 +92,21 @@ export default function MapView({ items, focusedItemId, fullHeight, visible = tr
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
-          <MapController items={items} focusedItemId={focusedItemId} visible={visible} />
+          <MapController items={items} focusedItemId={focusedItemId} visible={visible} markerRefs={markerRefs} />
           {withCoords.map(item => {
             const cfg = TYPE_CONFIG[item.type as ItemType] ?? TYPE_CONFIG['美食']
             const icon = typeIcons[item.type] ?? typeIcons['美食']!
             const { main, sub } = parseName(item.name)
             return (
-              <Marker key={item.id} position={[item.lat!, item.lng!]} icon={icon}>
+              <Marker
+                key={item.id}
+                position={[item.lat!, item.lng!]}
+                icon={icon}
+                ref={(el: L.Marker | null) => {
+                  if (el) markerRefs.current.set(item.id, el)
+                  else markerRefs.current.delete(item.id)
+                }}
+              >
                 <Popup>
                   <div style={{ minWidth: 120 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{main}</div>
