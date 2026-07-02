@@ -304,7 +304,7 @@ const menuItemStyle: React.CSSProperties = {
         <div style={{ maxWidth: 1440, margin: '0 auto', padding: '10px clamp(14px,3vw,24px)', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
           {/* Row 1 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(20px,2vw,24px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: 'var(--ink)' }}>
                 釜山
@@ -314,45 +314,45 @@ const menuItemStyle: React.CSSProperties = {
 
             <div style={{ flex: 1 }} />
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-              {/* Export — always visible */}
-              <button onClick={handleExportExcel} title="匯出 Excel" style={{ height: 36, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, borderRadius: 6, border: '1.5px solid var(--border-strong)', background: '#fff', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 13, color: 'var(--ink-2)' }}>
-                <span className="ms" style={{ fontSize: 17 }}>download</span>匯出
-              </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {unlocked && (
+                <button onClick={() => { setEditingItem(null); setShowModal(true) }} style={{ height: 34, padding: '0 14px', display: 'flex', alignItems: 'center', gap: 5, borderRadius: 7, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 13, background: 'var(--accent)', color: '#fff' }}>
+                  <span className="ms" style={{ fontSize: 17 }}>add</span>新增
+                </button>
+              )}
 
-              {unlocked ? (
-                <>
-                  <button onClick={handleLock} title="鎖定" style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, border: '1.5px solid var(--border)', background: '#fff', cursor: 'pointer', color: 'var(--ink-2)' }}>
-                    <span className="ms">lock_open</span>
-                  </button>
-                  <button onClick={() => setEditMode(m => !m)} style={{ height: 38, padding: '0 14px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 6, border: '1.5px solid var(--border-strong)', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 13.5, background: editMode ? 'var(--ink)' : '#fff', color: editMode ? '#fff' : 'var(--ink-2)', transition: 'all .15s' }}>
-                    <span className="ms" style={{ fontSize: 18 }}>{editMode ? 'check' : 'edit'}</span>
-                    {editMode ? '完成' : '編輯'}
-                  </button>
-                  <button onClick={() => { setEditingItem(null); setShowModal(true) }} style={{ height: 38, padding: '0 16px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 6, border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 13.5, background: 'var(--accent)', color: '#fff' }}>
-                    <span className="ms" style={{ fontSize: 18 }}>add</span>新增
-                  </button>
-                  <div style={{ position: 'relative' }}>
-                    <button onClick={() => setShowMenu(m => !m)} style={{ width: 38, height: 38, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, border: '1.5px solid var(--border)', background: '#fff', cursor: 'pointer', color: 'var(--ink-2)' }}>
-                      <span className="ms">more_horiz</span>
-                    </button>
-                    {showMenu && (
-                      <div style={{ position: 'absolute', right: 0, top: 46, width: 230, background: '#fff', border: '1px solid var(--border)', borderRadius: 8, boxShadow: 'var(--shadow-pop)', padding: 6, zIndex: 60, animation: 'pop .16s var(--ease-out)' }} onClick={e => e.stopPropagation()}>
-                        <button onClick={handleAddList} style={menuItemStyle}><span className="ms" style={{ fontSize: 19, color: 'var(--accent)' }}>playlist_add</span>新增空白清單</button>
+              {/* ⋯ Menu — always visible */}
+              <div style={{ position: 'relative' }}>
+                <button onClick={() => setShowMenu(m => !m)} style={{ width: 34, height: 34, display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: 7, border: '1.5px solid var(--border-strong)', background: '#fff', cursor: 'pointer', color: 'var(--ink-2)' }}>
+                  <span className="ms">more_horiz</span>
+                </button>
+                {showMenu && (
+                  <div style={{ position: 'absolute', right: 0, top: 42, width: 220, background: '#fff', border: '1px solid var(--border)', borderRadius: 8, boxShadow: 'var(--shadow-pop)', padding: 6, zIndex: 60, animation: 'pop .16s var(--ease-out)' }} onClick={e => e.stopPropagation()}>
+                    <button onClick={() => { handleExportExcel(); setShowMenu(false) }} style={menuItemStyle}><span className="ms" style={{ fontSize: 19, color: 'var(--ink-2)' }}>download</span>匯出 Excel</button>
+                    {unlocked && (
+                      <button onClick={() => { setEditMode(m => !m); setShowMenu(false) }} style={menuItemStyle}>
+                        <span className="ms" style={{ fontSize: 19, color: editMode ? 'var(--accent)' : 'var(--ink-2)' }}>{editMode ? 'check_circle' : 'edit'}</span>
+                        {editMode ? '結束編輯' : '編輯模式'}
+                      </button>
+                    )}
+                    <div style={{ height: 1, background: 'var(--border)', margin: '4px 2px' }} />
+                    {unlocked ? (
+                      <>
+                        <button onClick={handleAddList} style={menuItemStyle}><span className="ms" style={{ fontSize: 19, color: 'var(--ink-2)' }}>playlist_add</span>新增空白清單</button>
                         <button onClick={handleRenameList} style={menuItemStyle}><span className="ms" style={{ fontSize: 19, color: 'var(--ink-2)' }}>edit_note</span>重新命名此清單</button>
                         <div style={{ height: 1, background: 'var(--border)', margin: '4px 2px' }} />
                         <button onClick={() => { fileInputRef.current?.click(); setShowMenu(false) }} style={menuItemStyle}><span className="ms" style={{ fontSize: 19, color: 'var(--ink-2)' }}>upload_file</span>匯入 CSV（新清單）</button>
                         <div style={{ height: 1, background: 'var(--border)', margin: '4px 2px' }} />
                         <button onClick={handleDeleteList} style={{ ...menuItemStyle, color: 'var(--danger)' }}><span className="ms" style={{ fontSize: 19 }}>delete</span>刪除此清單</button>
-                      </div>
+                        <div style={{ height: 1, background: 'var(--border)', margin: '4px 2px' }} />
+                        <button onClick={() => { handleLock(); setShowMenu(false) }} style={menuItemStyle}><span className="ms" style={{ fontSize: 19, color: 'var(--ink-2)' }}>lock</span>鎖定</button>
+                      </>
+                    ) : (
+                      <button onClick={() => { handleUnlock(); setShowMenu(false) }} style={menuItemStyle}><span className="ms" style={{ fontSize: 19, color: 'var(--ink-2)' }}>lock_open</span>解鎖編輯</button>
                     )}
                   </div>
-                </>
-              ) : (
-                <button onClick={handleUnlock} style={{ height: 36, padding: '0 14px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: 6, border: '1.5px solid var(--border-strong)', background: '#fff', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 13, color: 'var(--ink-2)' }}>
-                  <span className="ms" style={{ fontSize: 17 }}>edit</span>編輯
-                </button>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
@@ -439,7 +439,7 @@ const menuItemStyle: React.CSSProperties = {
       <main style={{ flex: 1, maxWidth: 1440, width: '100%', margin: '0 auto', padding: 'clamp(12px,2vw,20px)', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
 
         {/* Items column */}
-        <section style={{ flex: '1 1 440px', minWidth: 300, display: isMobile && mobileView === 'map' ? 'none' : 'flex', flexDirection: 'column', gap: 8 }}>
+        <section style={{ flex: '1 1 440px', minWidth: 300, maxWidth: 520, display: isMobile && mobileView === 'map' ? 'none' : 'flex', flexDirection: 'column', gap: 8 }}>
           {loading ? (
             <p style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '48px 0' }}>載入中…</p>
           ) : lists.length === 0 ? (
@@ -476,26 +476,44 @@ const menuItemStyle: React.CSSProperties = {
         </section>
 
         {/* Map column */}
-        <aside style={{ flex: '1 1 360px', minWidth: 280, display: isMobile && mobileView === 'list' ? 'none' : undefined, position: isMobile ? 'relative' : 'sticky', top: isMobile ? undefined : 138, alignSelf: 'flex-start' }}>
+        <aside style={{ flex: '1 1 360px', minWidth: 280, display: isMobile && mobileView === 'list' ? 'none' : undefined, position: isMobile ? 'relative' : 'sticky', top: isMobile ? undefined : 96, alignSelf: 'flex-start' }}>
+          {/* Back to list button — mobile map mode only */}
+          {isMobile && mobileView === 'map' && (
+            <button
+              onClick={() => setMobileView('list')}
+              style={{
+                position: 'absolute', top: 12, left: 12, zIndex: 500,
+                height: 36, padding: '0 14px',
+                display: 'flex', alignItems: 'center', gap: 5,
+                background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(6px)',
+                border: '1px solid var(--border-strong)', borderRadius: 20,
+                fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, color: 'var(--ink)',
+                cursor: 'pointer', boxShadow: '0 2px 10px rgba(0,0,0,0.14)',
+              }}
+            >
+              <span className="ms" style={{ fontSize: 17 }}>arrow_back</span>
+              清單
+            </button>
+          )}
           <MapView items={filteredItems} focusedItemId={focusedItemId} fullHeight={isMobile} visible={!isMobile || mobileView === 'map'} />
         </aside>
       </main>
 
-      {/* Mobile floating toggle */}
-      {isMobile && (
+      {/* Mobile floating button — list mode only, switches to map */}
+      {isMobile && mobileView === 'list' && (
         <button
-          onClick={() => setMobileView(v => v === 'list' ? 'map' : 'list')}
+          onClick={() => setMobileView('map')}
           style={{
             position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 50,
-            height: 46, padding: '0 22px', borderRadius: 23,
+            height: 44, padding: '0 20px', borderRadius: 22,
             border: 'none', background: 'var(--ink)', color: '#fff',
-            display: 'flex', alignItems: 'center', gap: 7,
+            display: 'flex', alignItems: 'center', gap: 6,
             fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 14,
-            boxShadow: '0 4px 24px rgba(27,25,22,0.32)', cursor: 'pointer',
+            boxShadow: '0 4px 20px rgba(27,25,22,0.30)', cursor: 'pointer',
           }}
         >
-          <span className="ms" style={{ fontSize: 19 }}>{mobileView === 'list' ? 'map' : 'format_list_bulleted'}</span>
-          {mobileView === 'list' ? '地圖' : '清單'}
+          <span className="ms" style={{ fontSize: 18 }}>map</span>
+          地圖
         </button>
       )}
 
