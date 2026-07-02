@@ -24,7 +24,9 @@ function parseName(name: string): { main: string; sub: string | null } {
 }
 
 function getMapsUrl(item: Item): string {
-  const q = item.addr_kr || item.name
+  if (item.addr_kr) return `https://map.naver.com/p/search/${encodeURIComponent(item.addr_kr)}`
+  const m = item.name.match(/[（(]([^（(）)]+)[）)]/)
+  const q = m ? m[1].trim() : item.name
   return `https://map.naver.com/p/search/${encodeURIComponent(q)}`
 }
 
