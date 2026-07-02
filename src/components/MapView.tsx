@@ -11,9 +11,15 @@ function parseName(name: string) {
   return m ? { main: m[1].trim(), sub: m[2].trim() } : { main: name, sub: null }
 }
 
-function MapController({ items, focusedItemId }: { items: Item[]; focusedItemId: string | null }) {
+function MapController({ items, focusedItemId, visible }: { items: Item[]; focusedItemId: string | null; visible: boolean }) {
   const map = useMap()
   const listKeyRef = useRef('')
+
+  useEffect(() => {
+    if (!visible) return
+    const t = setTimeout(() => map.invalidateSize(), 50)
+    return () => clearTimeout(t)
+  }, [visible, map])
 
   useEffect(() => {
     const withCoords = items.filter(i => i.lat != null && i.lng != null)
@@ -36,7 +42,7 @@ function MapController({ items, focusedItemId }: { items: Item[]; focusedItemId:
   return null
 }
 
-export default function MapView({ items, focusedItemId, fullHeight }: { items: Item[]; focusedItemId: string | null; fullHeight?: boolean }) {
+export default function MapView({ items, focusedItemId, fullHeight, visible = true }: { items: Item[]; focusedItemId: string | null; fullHeight?: boolean; visible?: boolean }) {
   const withCoords = items.filter(i => i.lat != null && i.lng != null)
   const center: [number, number] = withCoords.length > 0 ? [withCoords[0].lat!, withCoords[0].lng!] : [35.158, 129.059]
 
@@ -48,7 +54,7 @@ export default function MapView({ items, focusedItemId, fullHeight }: { items: I
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
             url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
           />
-          <MapController items={items} focusedItemId={focusedItemId} />
+          <MapController items={items} focusedItemId={focusedItemId} visible={visible} />
           {withCoords.map(item => {
             const cfg = TYPE_CONFIG[item.type as ItemType] ?? TYPE_CONFIG['美食']
             const { main, sub } = parseName(item.name)

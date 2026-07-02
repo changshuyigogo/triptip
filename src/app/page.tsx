@@ -453,7 +453,7 @@ const menuItemStyle: React.CSSProperties = {
 
         {/* Map column */}
         <aside style={{ flex: '1 1 360px', minWidth: 280, display: isMobile && mobileView === 'list' ? 'none' : undefined, position: isMobile ? 'relative' : 'sticky', top: isMobile ? undefined : 138, alignSelf: 'flex-start' }}>
-          <MapView items={filteredItems} focusedItemId={focusedItemId} fullHeight={isMobile} />
+          <MapView items={filteredItems} focusedItemId={focusedItemId} fullHeight={isMobile} visible={!isMobile || mobileView === 'map'} />
         </aside>
       </main>
 
