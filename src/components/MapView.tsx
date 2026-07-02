@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
-import { MapContainer, TileLayer, CircleMarker, Popup, useMap } from 'react-leaflet'
+import { useEffect, useRef, useMemo } from 'react'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Item, ItemType } from '@/types'
 import { TYPE_CONFIG } from '@/types'
@@ -14,10 +15,26 @@ function parseName(name: string) {
 function MapController({ items, focusedItemId, visible }: { items: Item[]; focusedItemId: string | null; visible: boolean }) {
   const map = useMap()
   const listKeyRef = useRef('')
+  const focusedItemIdRef = useRef(focusedItemId)
+  const itemsRef = useRef(items)
+
+  useEffect(() => { focusedItemIdRef.current = focusedItemId }, [focusedItemId])
+  useEffect(() => { itemsRef.current = items }, [items])
 
   useEffect(() => {
     if (!visible) return
-    const t = setTimeout(() => map.invalidateSize(), 50)
+    // After map becomes visible, invalidate size then re-apply any pending focus.
+    // This fixes mobile: setView was firing before invalidateSize when switching from list→map.
+    const t = setTimeout(() => {
+      map.invalidateSize()
+      const fid = focusedItemIdRef.current
+      if (fid) {
+        const item = itemsRef.current.find(i => i.id === fid)
+        if (item?.lat && item?.lng) {
+          map.setView([item.lat, item.lng], Math.max(map.getZoom(), 15), { animate: true })
+        }
+      }
+    }, 60)
     return () => clearTimeout(t)
   }, [visible, map])
 
@@ -46,6 +63,20 @@ export default function MapView({ items, focusedItemId, fullHeight, visible = tr
   const withCoords = items.filter(i => i.lat != null && i.lng != null)
   const center: [number, number] = withCoords.length > 0 ? [withCoords[0].lat!, withCoords[0].lng!] : [35.158, 129.059]
 
+  const typeIcons = useMemo(() => {
+    const result: Partial<Record<string, L.DivIcon>> = {}
+    for (const [type, cfg] of Object.entries(TYPE_CONFIG)) {
+      result[type] = L.divIcon({
+        className: '',
+        html: `<div style="width:30px;height:30px;background:${cfg.color};border:2.5px solid #fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,0.28)"><span style="font-family:'Material Symbols Rounded';font-size:14px;color:#fff;font-style:normal;font-weight:400;line-height:1;display:inline-block;user-select:none">${cfg.icon}</span></div>`,
+        iconSize: [30, 30],
+        iconAnchor: [15, 15],
+        popupAnchor: [0, -20],
+      })
+    }
+    return result
+  }, [])
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
       <div style={{ width: '100%', height: fullHeight ? 'calc(100vh - 130px)' : 'clamp(340px, calc(100vh - 180px), 900px)', borderRadius: fullHeight ? 0 : 8, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
@@ -57,26 +88,27 @@ export default function MapView({ items, focusedItemId, fullHeight, visible = tr
           <MapController items={items} focusedItemId={focusedItemId} visible={visible} />
           {withCoords.map(item => {
             const cfg = TYPE_CONFIG[item.type as ItemType] ?? TYPE_CONFIG['美食']
+            const icon = typeIcons[item.type] ?? typeIcons['美食']!
             const { main, sub } = parseName(item.name)
             return (
-              <CircleMarker key={item.id} center={[item.lat!, item.lng!]} radius={8} pathOptions={{ fillColor: cfg.color, fillOpacity: 1, color: '#fff', weight: 3 }}>
+              <Marker key={item.id} position={[item.lat!, item.lng!]} icon={icon}>
                 <Popup>
                   <div style={{ minWidth: 120 }}>
                     <div style={{ fontWeight: 700, fontSize: 14, marginBottom: 2 }}>{main}</div>
-                    {sub && <div style={{ fontSize: 12, color: '#C85226', marginBottom: 2 }}>{sub}</div>}
+                    {sub && <div style={{ fontSize: 12, color: cfg.color, marginBottom: 2 }}>{sub}</div>}
                     {item.category && <div style={{ fontSize: 12, color: '#9A8F82' }}>{item.category}</div>}
                   </div>
                 </Popup>
-              </CircleMarker>
+              </Marker>
             )
           })}
         </MapContainer>
       </div>
-      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', paddingLeft: 2, flexShrink: 0 }}>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', paddingLeft: 2, flexShrink: 0 }}>
         {(['美食', '咖啡甜點', '景點', '商店'] as ItemType[]).map(type => (
-          <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: TYPE_CONFIG[type].color, flexShrink: 0 }} />
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-3)' }}>{type}</span>
+          <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span className="ms" style={{ fontSize: 13, color: TYPE_CONFIG[type].color }}>{TYPE_CONFIG[type].icon}</span>
+            <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--ink-3)' }}>{type}</span>
           </div>
         ))}
       </div>

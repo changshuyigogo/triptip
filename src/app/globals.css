@@ -17,8 +17,8 @@
   --shadow-pop: 0 20px 60px rgba(27,25,22,0.24);
   --sidebar: #1B1916;
   --ease-out: cubic-bezier(0.22,1,0.36,1);
-  --font-display: 'Lora', 'Noto Serif TC', 'Noto Sans TC', 'Noto Sans KR', Georgia, serif;
-  --font-body: 'Inter', 'Noto Sans TC', 'Noto Sans KR', system-ui, sans-serif;
+  --font-display: 'Lora', 'Noto Serif TC', 'Noto Sans TC', 'IBM Plex Sans KR', Georgia, serif;
+  --font-body: 'Inter', 'Noto Sans TC', 'IBM Plex Sans KR', system-ui, sans-serif;
   /* Back-compat aliases */
   --ws-green: var(--accent);
   --ws-forest: var(--accent-dark);

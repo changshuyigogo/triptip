@@ -39,11 +39,20 @@ function parseLine(line) {
   fields.push(cur); return fields
 }
 
-function toType(raw) {
-  const s = (raw ?? '').trim()
-  if (/咖啡|甜點|甜食|麵包|cafe|coffee|bakery/i.test(s)) return '咖啡甜點'
-  if (/景點|觀光|公園|海灘|beach/i.test(s)) return '景點'
-  if (/購物|商店|shop|store/i.test(s)) return '商店'
+function toType(raw, name = '') {
+  const combined = ((raw ?? '') + ' ' + (name ?? '')).toLowerCase()
+  const n = (name ?? '').toLowerCase()
+  // Shops first (before café to avoid 田浦咖啡街; before 市場 to prioritize 超市/藥妝)
+  if (/百貨|超市|藥妝|daiso|大創|換錢|money|伴手禮|禮品|stiikers|專門店|專賣/.test(combined)) return '商店'
+  if (/購物|商店|shop|store/.test(combined)) return '商店'
+  // Streets/districts → attraction (catches 田浦咖啡街 before café check)
+  if (/[路街]$|商圈$|浦$/.test(n) || /團路|藍線/.test(n)) return '景點'
+  // Café & dessert
+  if (/咖啡|甜點|甜食|麵包|cafe|coffee|bakery/i.test(combined)) return '咖啡甜點'
+  // Attractions
+  if (/景點|觀光|公園|海灘|beach|寺|廟|宮|塔|水族|博物|美術|museum|sea.?life|spa|市場|廣場|灌籃|列車|拍貼|似顏繪|the.?sky/.test(combined)) return '景點'
+  // Hotels/accommodations → 景點
+  if (/飯店|旅館|酒店|民宿|hotel|suite|hostel|residence|stay/.test(combined)) return '景點'
   return '美食'
 }
 
@@ -64,8 +73,15 @@ function parseCsv(content) {
     const lat = wkt ? parseFloat(wkt[2]) : null
     const rest = first.replace(/^"POINT\s*\([^)]+\)",?/, '').replace(/^POINT\s*\([^)]+\),?/, '')
     const f = parseLine(rest)
-    let desc = (f[5] ?? '').trim()
-    let source = f[6]?.trim() || null
+    // addr_zh may contain ASCII commas (e.g. English addresses), shifting all subsequent fields.
+    // Find addr_kr by locating the first field (from index 3) that contains Hangul characters.
+    const hasHangul = (s) => /[가-힣]/.test(s)
+    let addrKrIdx = f.findIndex((v, i) => i >= 3 && hasHangul(v))
+    if (addrKrIdx === -1) addrKrIdx = 4
+    const addrZh = addrKrIdx > 3 ? f.slice(3, addrKrIdx).join(',').trim() || null : f[3]?.trim() || null
+    const addrKr = f[addrKrIdx]?.trim() || null
+    let desc = (f[addrKrIdx + 1] ?? '').trim()
+    let source = f[addrKrIdx + 2]?.trim() || null
     for (let i = 1; i < block.length; i++) {
       const line = block[i]
       const extra = line.trim()
@@ -84,11 +100,11 @@ function parseCsv(content) {
     }
     return {
       name: f[0]?.trim() || '未命名',
-      type: toType(f[1] ?? ''),
+      type: toType(f[1] ?? '', f[0] ?? ''),
       category: f[1]?.trim() || null,
       area: f[2]?.trim() || null,
-      addr_zh: f[3]?.trim() || null,
-      addr_kr: f[4]?.trim() || null,
+      addr_zh: addrZh,
+      addr_kr: addrKr,
       description: desc.trim() || null,
       source: source || null,
       lat, lng,

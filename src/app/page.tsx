@@ -62,11 +62,15 @@ function parseGoogleMapsCsv(content: string): Omit<ItemInput, 'list_id' | 'sort_
     }
     fields.push(cur); return fields
   }
-  function toType(raw: string): ItemType {
-    const s = raw.trim()
-    if (/咖啡|甜點|甜食|麵包|cafe|coffee|bakery/i.test(s)) return '咖啡甜點'
-    if (/景點|觀光|公園|海灘|beach/i.test(s)) return '景點'
-    if (/購物|商店|shop|store/i.test(s)) return '商店'
+  function toType(raw: string, name = ''): ItemType {
+    const combined = (raw + ' ' + name).toLowerCase()
+    const n = name.toLowerCase()
+    if (/百貨|超市|藥妝|daiso|大創|換錢|money|伴手禮|禮品|stiikers|專門店|專賣/.test(combined)) return '商店'
+    if (/購物|商店|shop|store/.test(combined)) return '商店'
+    if (/[路街]$|商圈$|浦$/.test(n) || /團路|藍線/.test(n)) return '景點'
+    if (/咖啡|甜點|甜食|麵包|cafe|coffee|bakery/i.test(combined)) return '咖啡甜點'
+    if (/景點|觀光|公園|海灘|beach|寺|廟|宮|塔|水族|博物|美術|museum|sea.?life|spa|市場|廣場|灌籃|列車|拍貼|似顏繪|the.?sky/.test(combined)) return '景點'
+    if (/飯店|旅館|酒店|民宿|hotel|suite|hostel|residence|stay/.test(combined)) return '景點'
     return '美食'
   }
   const lines = content.split('\n')
@@ -84,18 +88,27 @@ function parseGoogleMapsCsv(content: string): Omit<ItemInput, 'list_id' | 'sort_
     const lat = wkt ? parseFloat(wkt[2]) : null
     const rest = first.replace(/^"POINT\s*\([^)]+\)",?/, '').replace(/^POINT\s*\([^)]+\),?/, '')
     const f = parseLine(rest)
-    let desc = (f[5] ?? '').trim()
-    let source = f[6]?.trim() || null
+    // addr_zh may contain ASCII commas (e.g. English addresses), shifting all subsequent fields.
+    // Find addr_kr by locating the first field (from index 3) that contains Hangul characters.
+    const hasHangul = (s: string) => /[가-힣]/.test(s)
+    let addrKrIdx = f.findIndex((v, i) => i >= 3 && hasHangul(v))
+    if (addrKrIdx === -1) addrKrIdx = 4
+    const addrZh = addrKrIdx > 3 ? f.slice(3, addrKrIdx).join(',').trim() || null : f[3]?.trim() || null
+    const addrKr = f[addrKrIdx]?.trim() || null
+    let desc = (f[addrKrIdx + 1] ?? '').trim()
+    let source = f[addrKrIdx + 2]?.trim() || null
     for (let i = 1; i < block.length; i++) {
       const line = block[i]; const extra = line.trim()
       if (!extra) continue
       if (/^,\s*\S+$/.test(line)) { if (!source) source = extra.replace(/^,/, '').trim(); continue }
-      desc += (desc ? '\n' : '') + extra
+      const m = extra.match(/^(.*),([^,\n]+)$/)
+      if (m && !source) { desc += (desc ? '\n' : '') + m[1].trim(); source = m[2].trim() }
+      else { desc += (desc ? '\n' : '') + extra }
     }
     return {
-      name: f[0]?.trim() || '未命名', type: toType(f[1] ?? ''),
+      name: f[0]?.trim() || '未命名', type: toType(f[1] ?? '', f[0] ?? ''),
       category: f[1]?.trim() || null, area: f[2]?.trim() || null,
-      addr_zh: f[3]?.trim() || null, addr_kr: f[4]?.trim() || null,
+      addr_zh: addrZh, addr_kr: addrKr,
       description: desc.trim() || null, source: source || null, lat, lng,
     }
   }).filter(i => i.name !== '未命名' || i.lat != null)
@@ -397,16 +410,27 @@ const menuItemStyle: React.CSSProperties = {
                 options={[{ value: '全部', label: '全部來源' }, ...sourceOptions.map(o => ({ value: o, label: o }))]}
               />
             )}
-            <CustomSelect
-              value={sort}
-              onChange={v => setSort(v as typeof sort)}
-              options={[
-                { value: 'manual', label: '清單順序' },
-                { value: 'name', label: '依名稱' },
-                { value: 'area', label: '依地區' },
-                { value: 'category', label: '依類別' },
-              ]}
-            />
+            <div style={{ display: 'flex', gap: 2, background: 'var(--bg)', borderRadius: 6, padding: 2, border: '1.5px solid var(--border-strong)', flexShrink: 0 }}>
+              {([
+                { value: 'manual', label: '順序' },
+                { value: 'name', label: '名稱' },
+                { value: 'area', label: '地區' },
+                { value: 'category', label: '類別' },
+              ] as { value: typeof sort; label: string }[]).map(opt => (
+                <button key={opt.value} onClick={() => setSort(opt.value)}
+                  style={{
+                    height: 28, padding: '0 9px',
+                    border: 'none', borderRadius: 4,
+                    background: sort === opt.value ? 'var(--ink)' : 'transparent',
+                    color: sort === opt.value ? '#fff' : 'var(--ink-3)',
+                    fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12,
+                    cursor: 'pointer', transition: 'all .13s', whiteSpace: 'nowrap',
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </header>
