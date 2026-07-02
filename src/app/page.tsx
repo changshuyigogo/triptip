@@ -127,8 +127,6 @@ export default function HomePage() {
     fetchLists()
   }, [])
 
-  useEffect(() => { if (activeListId) fetchItems(activeListId) }, [activeListId])
-
   useEffect(() => {
     if (!showMenu) return
     function handle() { setShowMenu(false) }
@@ -162,17 +160,13 @@ const activeList = useMemo(() => lists.find(l => l.id === activeListId), [lists,
   const canReorder = sort === 'manual' && !search && typeFilter === '全部' && categoryFilter === '全部' && areaFilter === '全部' && sourceFilter === '全部'
 
   async function fetchLists() {
-    const { data } = await supabase.from('lists').select('*').order('sort_order')
-    const ls = data || []
-    setLists(ls)
-    if (ls.length > 0) setActiveListId(ls[0].id)
-    else setLoading(false)
-  }
-
-  async function fetchItems(listId: string) {
+    const { data: ls } = await supabase.from('lists').select('*').order('sort_order')
+    const lists = ls || []
+    setLists(lists)
+    if (lists.length > 0) setActiveListId(lists[0].id)
     setLoading(true)
-    const { data } = await supabase.from('items').select('*').eq('list_id', listId).order('sort_order')
-    setItems(data || [])
+    const { data: items } = await supabase.from('items').select('*').order('sort_order')
+    setItems(items || [])
     setLoading(false)
   }
 
@@ -255,7 +249,6 @@ const activeList = useMemo(() => lists.find(l => l.id === activeListId), [lists,
   }
 
   async function handleExportExcel() {
-    if (!activeList) return
     const XLSX = await import('xlsx')
     const wsData = [
       ['名稱', '大分類', '類別標籤', '地區', '說明', '韓文地址', '來源', '緯度', '經度'],
@@ -263,8 +256,8 @@ const activeList = useMemo(() => lists.find(l => l.id === activeListId), [lists,
     ]
     const ws = XLSX.utils.aoa_to_sheet(wsData)
     const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, activeList.name.slice(0, 31))
-    XLSX.writeFile(wb, `${activeList.name}.xlsx`)
+    XLSX.utils.book_append_sheet(wb, ws, '釜山')
+    XLSX.writeFile(wb, '釜山.xlsx')
   }
 
   const countLabel = filteredItems.length < items.length
@@ -295,7 +288,7 @@ const menuItemStyle: React.CSSProperties = {
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
             <div style={{ minWidth: 0 }}>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(18px,2vw,22px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: 'var(--ink)' }}>
-                {activeList?.name ?? 'TripTip'}
+                釜山
               </div>
               <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)', lineHeight: 1.3, marginTop: 1 }}>{countLabel}</div>
             </div>
@@ -303,15 +296,6 @@ const menuItemStyle: React.CSSProperties = {
             <div style={{ flex: 1 }} />
 
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-              {lists.length > 1 && (
-                <CustomSelect
-                  value={activeListId ?? ''}
-                  onChange={setActiveListId}
-                  options={lists.map(l => ({ value: l.id, label: l.name }))}
-                  accent
-                />
-              )}
-
               {/* Export — always visible */}
               <button onClick={handleExportExcel} title="匯出 Excel" style={{ height: 36, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 5, borderRadius: 6, border: '1.5px solid var(--border-strong)', background: '#fff', cursor: 'pointer', fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 13, color: 'var(--ink-2)' }}>
                 <span className="ms" style={{ fontSize: 17 }}>download</span>匯出
