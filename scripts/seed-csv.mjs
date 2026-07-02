@@ -26,8 +26,8 @@ async function rpc(method, path, body) {
   return text ? JSON.parse(text) : null
 }
 
-const CSV_PATH = '/Users/shuyi/Downloads/2026 Jul  釜山海雲台西面- 飯店  景點  機場  商店.csv'
-const LIST_NAME = '飯店・景點・機場・商店'
+const CSV_PATH = process.argv[2] ?? '/Users/shuyi/Developer/triptip/design_handoff_travel_list/2026 Jul 釜山海雲台西面- 海雲台餐廳.csv'
+const LIST_NAME = process.argv[3] ?? '釜山'
 
 function parseLine(line) {
   const fields = []; let cur = '', inQ = false
@@ -43,14 +43,14 @@ function toType(raw, name = '') {
   const combined = ((raw ?? '') + ' ' + (name ?? '')).toLowerCase()
   const n = (name ?? '').toLowerCase()
   // Shops first (before café to avoid 田浦咖啡街; before 市場 to prioritize 超市/藥妝)
-  if (/百貨|超市|藥妝|daiso|大創|換錢|money|伴手禮|禮品|stiikers|專門店|專賣/.test(combined)) return '商店'
+  if (/百貨|超市|藥妝|daiso|大創|換錢|money|伴手禮|禮品|stiikers|專門店|專賣|outlet|mart/.test(combined)) return '商店'
   if (/購物|商店|shop|store/.test(combined)) return '商店'
   // Streets/districts → attraction (catches 田浦咖啡街 before café check)
   if (/[路街]$|商圈$|浦$/.test(n) || /團路|藍線/.test(n)) return '景點'
   // Café & dessert
   if (/咖啡|甜點|甜食|麵包|cafe|coffee|bakery/i.test(combined)) return '咖啡甜點'
   // Attractions
-  if (/景點|觀光|公園|海灘|beach|寺|廟|宮|塔|水族|博物|美術|museum|sea.?life|spa|市場|廣場|灌籃|列車|拍貼|似顏繪|the.?sky/.test(combined)) return '景點'
+  if (/景點|觀光|公園|海灘|beach|寺|廟|宮|塔|水族|博物|美術|museum|sea.?life|spa|市場|廣場|灌籃|列車|拍貼|似顏繪|the.?sky|文化村|文化園|arte/.test(combined)) return '景點'
   // Hotels/accommodations → 景點
   if (/飯店|旅館|酒店|民宿|hotel|suite|hostel|residence|stay/.test(combined)) return '景點'
   return '美食'
