@@ -26,8 +26,8 @@ async function rpc(method, path, body) {
   return text ? JSON.parse(text) : null
 }
 
-const CSV_PATH = '/Users/shuyi/Downloads/2026 Jul  釜山海雲台西面- 西面餐廳.csv'
-const LIST_NAME = '西面餐廳'
+const CSV_PATH = '/Users/shuyi/Downloads/2026 Jul  釜山海雲台西面- 飯店  景點  機場  商店.csv'
+const LIST_NAME = '飯店・景點・機場・商店'
 
 function parseLine(line) {
   const fields = []; let cur = '', inQ = false
