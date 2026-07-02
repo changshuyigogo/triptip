@@ -120,11 +120,17 @@ export default function HomePage() {
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [focusedItemId, setFocusedItemId] = useState<string | null>(null)
   const [expandedItemId, setExpandedItemId] = useState<string | null>(null)
+  const [mobileView, setMobileView] = useState<'list' | 'map'>('list')
+  const [isMobile, setIsMobile] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (localStorage.getItem('travel_unlock')) setUnlocked(true)
     fetchLists()
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
   }, [])
 
   useEffect(() => {
@@ -409,7 +415,7 @@ const menuItemStyle: React.CSSProperties = {
       <main style={{ flex: 1, maxWidth: 1440, width: '100%', margin: '0 auto', padding: 'clamp(14px,2.5vw,24px)', display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
 
         {/* Items column */}
-        <section style={{ flex: '1 1 440px', minWidth: 300, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <section style={{ flex: '1 1 440px', minWidth: 300, display: isMobile && mobileView === 'map' ? 'none' : 'flex', flexDirection: 'column', gap: 12 }}>
           {loading ? (
             <p style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '48px 0' }}>載入中…</p>
           ) : lists.length === 0 ? (
@@ -434,6 +440,7 @@ const menuItemStyle: React.CSSProperties = {
                 onClick={() => {
                   setFocusedItemId(item.id)
                   setExpandedItemId(id => id === item.id ? null : item.id)
+                  if (isMobile) setMobileView('map')
                 }}
                 onEdit={() => { setEditingItem(item); setShowModal(true) }}
                 onDelete={() => handleDeleteItem(item.id)}
@@ -445,10 +452,28 @@ const menuItemStyle: React.CSSProperties = {
         </section>
 
         {/* Map column */}
-        <aside style={{ flex: '1 1 360px', minWidth: 280, position: 'sticky', top: 138, alignSelf: 'flex-start' }}>
-          <MapView items={filteredItems} focusedItemId={focusedItemId} />
+        <aside style={{ flex: '1 1 360px', minWidth: 280, display: isMobile && mobileView === 'list' ? 'none' : undefined, position: isMobile ? 'relative' : 'sticky', top: isMobile ? undefined : 138, alignSelf: 'flex-start' }}>
+          <MapView items={filteredItems} focusedItemId={focusedItemId} fullHeight={isMobile} />
         </aside>
       </main>
+
+      {/* Mobile floating toggle */}
+      {isMobile && (
+        <button
+          onClick={() => setMobileView(v => v === 'list' ? 'map' : 'list')}
+          style={{
+            position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 50,
+            height: 46, padding: '0 22px', borderRadius: 23,
+            border: 'none', background: 'var(--ink)', color: '#fff',
+            display: 'flex', alignItems: 'center', gap: 7,
+            fontFamily: 'var(--font-body)', fontWeight: 500, fontSize: 14,
+            boxShadow: '0 4px 24px rgba(27,25,22,0.32)', cursor: 'pointer',
+          }}
+        >
+          <span className="ms" style={{ fontSize: 19 }}>{mobileView === 'list' ? 'map' : 'format_list_bulleted'}</span>
+          {mobileView === 'list' ? '地圖' : '清單'}
+        </button>
+      )}
 
       {showModal && activeListId && (
         <ItemModal item={editingItem} listId={activeListId} onSave={handleSaveItem} onClose={() => { setShowModal(false); setEditingItem(null) }} />

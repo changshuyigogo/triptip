@@ -36,13 +36,13 @@ function MapController({ items, focusedItemId }: { items: Item[]; focusedItemId:
   return null
 }
 
-export default function MapView({ items, focusedItemId }: { items: Item[]; focusedItemId: string | null }) {
+export default function MapView({ items, focusedItemId, fullHeight }: { items: Item[]; focusedItemId: string | null; fullHeight?: boolean }) {
   const withCoords = items.filter(i => i.lat != null && i.lng != null)
   const center: [number, number] = withCoords.length > 0 ? [withCoords[0].lat!, withCoords[0].lng!] : [35.158, 129.059]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-      <div style={{ width: '100%', height: 'clamp(340px, calc(100vh - 180px), 900px)', borderRadius: 8, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
+      <div style={{ width: '100%', height: fullHeight ? 'calc(100vh - 130px)' : 'clamp(340px, calc(100vh - 180px), 900px)', borderRadius: fullHeight ? 0 : 8, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' }}>
         <MapContainer center={center} zoom={13} style={{ height: '100%', width: '100%' }}>
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
