@@ -51,10 +51,10 @@ export default function ItemCard({ item, editMode, expanded, canReorder, isFirst
       onClick={onClick}
       style={{
         background: 'var(--surface)',
-        borderRadius: 8,
+        borderRadius: 10,
         border: `1.5px solid ${expanded ? cfg.color : 'var(--border)'}`,
         boxShadow: expanded ? `0 2px 12px ${cfg.color}22` : 'var(--shadow-card)',
-        padding: '13px 15px',
+        padding: '11px 14px 11px 16px',
         cursor: 'pointer',
         transition: 'border-color .15s, box-shadow .15s',
         position: 'relative',
@@ -62,20 +62,20 @@ export default function ItemCard({ item, editMode, expanded, canReorder, isFirst
       }}
     >
       {/* Left type bar */}
-      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, background: cfg.color }} />
+      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, background: cfg.color }} />
 
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           {/* Meta row: type icon + category + area */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
-            <span className="ms" style={{ fontSize: 15, color: cfg.color, flexShrink: 0 }}>{cfg.icon}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexWrap: 'wrap', marginBottom: 3 }}>
+            <span className="ms" style={{ fontSize: 14, color: cfg.color, flexShrink: 0 }}>{cfg.icon}</span>
             {item.category && (
-              <span style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ink-2)', background: 'var(--bg)', padding: '1px 7px', borderRadius: 3 }}>
+              <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-2)', background: 'var(--bg)', padding: '1px 6px', borderRadius: 3 }}>
                 {item.category}
               </span>
             )}
             {item.area && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 11.5, fontWeight: 400, color: 'var(--ink-3)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 2, fontSize: 12, fontWeight: 400, color: 'var(--ink-3)' }}>
                 <span className="ms" style={{ fontSize: 12 }}>place</span>
                 {item.area}
               </span>
@@ -83,8 +83,8 @@ export default function ItemCard({ item, editMode, expanded, canReorder, isFirst
           </div>
 
           {/* Name */}
-          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 16, lineHeight: 1.25, color: 'var(--ink)', letterSpacing: '-0.02em', wordBreak: 'break-word' }}>{main}</div>
-          {sub && <div style={{ fontSize: 12.5, fontWeight: 400, color: 'var(--ink-3)', marginTop: 2 }}>{sub}</div>}
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 15, lineHeight: 1.3, color: 'var(--ink)', letterSpacing: '-0.025em', wordBreak: 'break-word' }}>{main}</div>
+          {sub && <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)', marginTop: 2 }}>{sub}</div>}
         </div>
 
         {/* Edit controls */}
@@ -112,9 +112,9 @@ export default function ItemCard({ item, editMode, expanded, canReorder, isFirst
 
       {/* Expanded: description + actions */}
       {expanded && (
-        <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid var(--border)' }} onClick={e => e.stopPropagation()}>
+        <div style={{ marginTop: 9, paddingTop: 9, borderTop: '1px solid var(--border)' }} onClick={e => e.stopPropagation()}>
           {item.description && (
-            <p style={{ margin: '0 0 10px', fontSize: 13.5, lineHeight: 1.65, color: 'var(--ink-2)', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
+            <p style={{ margin: '0 0 9px', fontSize: 13, lineHeight: 1.65, color: 'var(--ink-2)', whiteSpace: 'pre-line', wordBreak: 'break-word' }}>
               {item.description}
             </p>
           )}

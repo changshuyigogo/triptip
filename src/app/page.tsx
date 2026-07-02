@@ -301,15 +301,15 @@ const menuItemStyle: React.CSSProperties = {
 
       {/* ─── HEADER ─── */}
       <header style={{ position: 'sticky', top: 0, zIndex: 40, background: 'rgba(255,255,255,0.95)', backdropFilter: 'blur(10px)', borderBottom: '1px solid var(--border)' }}>
-        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '12px clamp(14px,3vw,28px)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ maxWidth: 1440, margin: '0 auto', padding: '10px clamp(14px,3vw,24px)', display: 'flex', flexDirection: 'column', gap: 8 }}>
 
           {/* Row 1 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(18px,2vw,22px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: 'var(--ink)' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 500, fontSize: 'clamp(20px,2vw,24px)', lineHeight: 1.1, letterSpacing: '-0.03em', color: 'var(--ink)' }}>
                 釜山
               </div>
-              <div style={{ fontSize: 12, fontWeight: 400, color: 'var(--ink-3)', lineHeight: 1.3, marginTop: 1 }}>{countLabel}</div>
+              <div style={{ fontSize: 11.5, fontWeight: 400, color: 'var(--ink-3)', lineHeight: 1.3, marginTop: 1 }}>{countLabel}</div>
             </div>
 
             <div style={{ flex: 1 }} />
@@ -357,28 +357,28 @@ const menuItemStyle: React.CSSProperties = {
           </div>
 
           {/* Row 2 */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: 300 }}>
-              <span className="ms" style={{ fontSize: 18, position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-3)', pointerEvents: 'none' }}>search</span>
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜尋…" style={{ width: '100%', height: 38, padding: '0 10px 0 34px', borderRadius: 6, border: '1.5px solid var(--border-strong)', background: '#fff', fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 14, color: 'var(--ink)' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <div style={{ position: 'relative', flex: '1 1 160px', maxWidth: 280 }}>
+              <span className="ms" style={{ fontSize: 17, position: 'absolute', left: 9, top: '50%', transform: 'translateY(-50%)', color: 'var(--ink-3)', pointerEvents: 'none' }}>search</span>
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="搜尋…" style={{ width: '100%', height: 34, padding: '0 10px 0 32px', borderRadius: 7, border: '1.5px solid var(--border-strong)', background: '#fff', fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 13.5, color: 'var(--ink)' }} />
             </div>
 
             {/* Type filter — icon chips */}
-            <div style={{ display: 'flex', gap: 5, flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
               {typeChips.map(c => {
                 const sel = typeFilter === c.value
                 return (
                   <button key={c.value} onClick={() => setTypeFilter(c.value)} title={c.label} style={{
-                    height: 34, padding: '0 9px',
-                    display: 'flex', alignItems: 'center', gap: 4,
+                    height: 32, padding: '0 8px',
+                    display: 'flex', alignItems: 'center', gap: 3,
                     border: `1.5px solid ${sel ? c.color : 'var(--border-strong)'}`,
-                    borderRadius: 6, cursor: 'pointer',
+                    borderRadius: 7, cursor: 'pointer',
                     background: sel ? (c.color + '18') : '#fff',
                     color: sel ? c.color : 'var(--ink-3)',
                     transition: 'all .14s',
                   }}>
                     {c.icon
-                      ? <span className="ms" style={{ fontSize: 15 }}>{c.icon}</span>
+                      ? <span className="ms" style={{ fontSize: 14 }}>{c.icon}</span>
                       : <span style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12 }}>全部</span>
                     }
                     <span style={{ fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 11, opacity: sel ? 0.8 : 0.5 }}>{c.count}</span>
@@ -410,7 +410,7 @@ const menuItemStyle: React.CSSProperties = {
                 options={[{ value: '全部', label: '全部來源' }, ...sourceOptions.map(o => ({ value: o, label: o }))]}
               />
             )}
-            <div style={{ display: 'flex', gap: 2, background: 'var(--bg)', borderRadius: 6, padding: 2, border: '1.5px solid var(--border-strong)', flexShrink: 0 }}>
+            <div style={{ display: 'flex', gap: 1, background: 'var(--bg)', borderRadius: 7, padding: 2, border: '1.5px solid var(--border-strong)', flexShrink: 0 }}>
               {([
                 { value: 'manual', label: '順序' },
                 { value: 'name', label: '名稱' },
@@ -419,8 +419,8 @@ const menuItemStyle: React.CSSProperties = {
               ] as { value: typeof sort; label: string }[]).map(opt => (
                 <button key={opt.value} onClick={() => setSort(opt.value)}
                   style={{
-                    height: 28, padding: '0 9px',
-                    border: 'none', borderRadius: 4,
+                    height: 26, padding: '0 8px',
+                    border: 'none', borderRadius: 5,
                     background: sort === opt.value ? 'var(--ink)' : 'transparent',
                     color: sort === opt.value ? '#fff' : 'var(--ink-3)',
                     fontFamily: 'var(--font-body)', fontWeight: 400, fontSize: 12,
@@ -436,10 +436,10 @@ const menuItemStyle: React.CSSProperties = {
       </header>
 
       {/* ─── MAIN ─── */}
-      <main style={{ flex: 1, maxWidth: 1440, width: '100%', margin: '0 auto', padding: 'clamp(14px,2.5vw,24px)', display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'flex-start' }}>
+      <main style={{ flex: 1, maxWidth: 1440, width: '100%', margin: '0 auto', padding: 'clamp(12px,2vw,20px)', display: 'flex', flexWrap: 'wrap', gap: 16, alignItems: 'flex-start' }}>
 
         {/* Items column */}
-        <section style={{ flex: '1 1 440px', minWidth: 300, display: isMobile && mobileView === 'map' ? 'none' : 'flex', flexDirection: 'column', gap: 12 }}>
+        <section style={{ flex: '1 1 440px', minWidth: 300, display: isMobile && mobileView === 'map' ? 'none' : 'flex', flexDirection: 'column', gap: 8 }}>
           {loading ? (
             <p style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '48px 0' }}>載入中…</p>
           ) : lists.length === 0 ? (
