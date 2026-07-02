@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #EDEAE3;
+  --surface: #FFFFFF;
+  --ink: #1B1916;
+  --ink-2: #6A6760;
+  --ink-3: #A09C95;
+  --accent: #C85226;
+  --accent-bg: #F8EDE8;
+  --accent-dark: #9B3E1A;
+  --danger: #C53030;
+  --link: #2563EB;
+  --border: rgba(27,25,22,0.10);
+  --border-strong: rgba(27,25,22,0.20);
+  --shadow-card: 0 1px 3px rgba(27,25,22,0.08);
+  --shadow-pop: 0 20px 60px rgba(27,25,22,0.24);
+  --sidebar: #1B1916;
+  --ease-out: cubic-bezier(0.22,1,0.36,1);
+  --font-display: 'Lora', 'Noto Serif TC', 'Noto Sans TC', 'Noto Sans KR', Georgia, serif;
+  --font-body: 'Inter', 'Noto Sans TC', 'Noto Sans KR', system-ui, sans-serif;
+  /* Back-compat aliases */
+  --ws-green: var(--accent);
+  --ws-forest: var(--accent-dark);
+  --ws-green-mint: var(--accent-bg);
+  --ws-green-light: #F0EAE4;
+  --ws-black: var(--ink);
+  --ws-cool-dark: var(--ink-2);
+  --ws-dark-gray: var(--ink-3);
+  --ws-cool-gray: #EEECE8;
+  --ws-red: var(--danger);
+  --ws-blue: var(--link);
+  --border-subtle: var(--border);
+  --border-default: var(--border-strong);
+  --sel-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23A09C95' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.5; -webkit-font-smoothing: antialiased; margin: 0; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+.ms { font-family: 'Material Symbols Rounded'; font-size: 20px; line-height: 1; font-style: normal; font-weight: normal; user-select: none; display: inline-block; }
+.leaflet-container { font-family: var(--font-body) !important; border-radius: 8px; }
+.leaflet-popup-content { font-family: var(--font-body) !important; font-weight: 500; margin: 12px 14px; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+@keyframes pop { from { opacity: 0; transform: scale(.97) translateY(4px); } to { opacity: 1; transform: none; } }

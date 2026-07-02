@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+  <link rel="stylesheet" href="assets/ds/colors_and_type.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,400,0,0">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Quicksand:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Sans+JP:wght@400;500;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    :root{
+      --ws-green:#EC6A52; --ws-forest:#C4482E; --ws-green-dark:#C4482E;
+      --ws-green-mint:#FBE7E0; --ws-green-light:#F6D6CB; --ws-green-stroke:#C4482E;
+      --ws-black:#3B3733; --ws-cool-dark:#5F574F; --ws-dark-gray:#9A8F82;
+      --ws-cool-gray:#F3ECE2; --ws-light-blue:#FBF6EF; --ws-red:#DB5A54;
+      --border-subtle:rgba(59,55,51,0.08); --border-default:rgba(59,55,51,0.17);
+      --shadow-card:0 4px 20px rgba(59,55,51,0.08); --shadow-pop:0 16px 44px rgba(59,55,51,0.18);
+      --ease-emphasized:cubic-bezier(0.22,1,0.36,1);
+      --font-display:'Baloo 2','Noto Sans TC','Noto Sans JP','Noto Sans KR',system-ui,sans-serif;
+      --font-body:'Quicksand','Noto Sans TC','Noto Sans JP','Noto Sans KR',system-ui,sans-serif;
+      --sel-chevron:url("data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A//www.w3.org/2000/svg%27%20width%3D%2716%27%20height%3D%2716%27%20viewBox%3D%270%200%2024%2024%27%20fill%3D%27none%27%20stroke%3D%27%23948A7E%27%20stroke-width%3D%272.6%27%20stroke-linecap%3D%27round%27%20stroke-linejoin%3D%27round%27%3E%3Cpath%20d%3D%27M6%209l6%206%206-6%27/%3E%3C/svg%3E");
+    }
+    *{ box-sizing:border-box; }
+    body{ background:var(--ws-light-blue); margin:0; font-family:var(--font-body); }
+    ::-webkit-scrollbar{ width:10px; height:10px; }
+    ::-webkit-scrollbar-thumb{ background:rgba(0,0,0,0.14); border-radius:999px; }
+    ::-webkit-scrollbar-track{ background:transparent; }
+    .leaflet-container{ font-family:var(--font-body); border-radius:20px; }
+    .leaflet-popup-content{ font-family:var(--font-body); font-weight:700; margin:12px 14px; }
+    input:focus, select:focus, textarea:focus{ outline:2px solid var(--ws-green); outline-offset:1px; }
+    @keyframes fadeUp{ from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:none;} }
+    @keyframes pop{ from{opacity:0; transform:scale(.96);} to{opacity:1; transform:none;} }
+  </style>
+</helmet>
+<div style="min-height:100vh; display:flex; flex-direction:column; font-family:var(--font-body); color:var(--ws-black);">
+
+  <header style="position:sticky; top:0; z-index:40; background:rgba(255,255,255,0.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--border-subtle);">
+    <div style="max-width:1440px; margin:0 auto; padding:12px clamp(14px,3vw,32px); display:flex; flex-direction:column; gap:12px;">
+
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+          <div style="width:38px; height:38px; border-radius:12px; background:var(--ws-green); display:flex; align-items:center; justify-content:center; flex:none; box-shadow:0 3px 10px rgba(236,106,82,0.35);"><span style="font-family:'Material Symbols Rounded'; font-size:23px; color:#fff;">travel_explore</span></div>
+          <div style="min-width:0;">
+            <div style="font-family:var(--font-display); font-weight:900; font-size:clamp(18px,2.4vw,24px); line-height:1.05; letter-spacing:-0.02em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ listName }}</div>
+            <div style="font-size:13px; font-weight:700; color:var(--ws-dark-gray); line-height:1.2;">{{ countLabel }}</div>
+          </div>
+        </div>
+
+        <div style="flex:1;"></div>
+
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <div style="position:relative; display:flex; align-items:center;">
+            <span style="font-family:'Material Symbols Rounded'; font-size:18px; position:absolute; left:10px; color:var(--ws-forest); pointer-events:none;">list</span>
+            <select value="{{ activeListId }}" onChange="{{ onListChange }}" title="切換清單" style="appearance:none; height:40px; padding:0 30px 0 34px; border-radius:999px; border:1.5px solid var(--ws-green); background:var(--ws-green-mint); color:var(--ws-forest); font-family:var(--font-display); font-weight:800; font-size:14px; cursor:pointer; max-width:200px; text-overflow:ellipsis;">
+              <sc-for list="{{ lists }}" as="l" hint-placeholder-count="1">
+                <option value="{{ l.id }}">{{ l.name }}</option>
+              </sc-for>
+            </select>
+            <span style="font-family:'Material Symbols Rounded'; font-size:18px; position:absolute; right:8px; color:var(--ws-forest); pointer-events:none;">expand_more</span>
+          </div>
+
+          <sc-if value="{{ locked }}" hint-placeholder-val="{{ false }}">
+            <button onClick="{{ unlock }}" title="輸入密碼即可編輯" style="height:40px; padding:0 16px; display:inline-flex; align-items:center; gap:6px; border-radius:999px; border:1.5px solid var(--border-default); background:#fff; cursor:pointer; font-family:var(--font-display); font-weight:800; font-size:14px; color:var(--ws-cool-dark); transition:background .18s;" style-hover="background:var(--ws-cool-gray);">
+              <span style="font-family:'Material Symbols Rounded'; font-size:19px;">lock</span>檢視中
+            </button>
+          </sc-if>
+
+          <sc-if value="{{ unlocked }}" hint-placeholder-val="{{ true }}">
+          <button onClick="{{ lock }}" title="鎖定，切回檢視模式" style="width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; border:1.5px solid var(--border-default); background:#fff; cursor:pointer; color:var(--ws-forest);" style-hover="background:var(--ws-green-mint);">
+            <span style="font-family:'Material Symbols Rounded'; font-size:20px;">lock_open</span>
+          </button>
+          <button onClick="{{ toggleEdit }}" title="編輯模式" style="height:40px; padding:0 16px; display:inline-flex; align-items:center; gap:6px; border-radius:999px; border:none; cursor:pointer; font-family:var(--font-display); font-weight:800; font-size:14px; background:{{ editBtnBg }}; color:{{ editBtnFg }}; transition:all .18s;">
+            <span style="font-family:'Material Symbols Rounded'; font-size:19px;">{{ editIcon }}</span>{{ editBtnLabel }}
+          </button>
+
+          <button onClick="{{ openAdd }}" title="新增一間" style="height:40px; padding:0 18px; display:inline-flex; align-items:center; gap:6px; border-radius:999px; border:none; cursor:pointer; font-family:var(--font-display); font-weight:800; font-size:14px; background:var(--ws-green); color:#fff; transition:transform .12s, background .18s;" style-hover="background:var(--ws-forest);" style-active="transform:scale(0.96);">
+            <span style="font-family:'Material Symbols Rounded'; font-size:20px;">add</span>新增
+          </button>
+
+          <div style="position:relative;">
+            <button onClick="{{ toggleMenu }}" title="更多" style="width:40px; height:40px; display:inline-flex; align-items:center; justify-content:center; border-radius:999px; border:1.5px solid var(--border-default); background:#fff; cursor:pointer; color:var(--ws-cool-dark);" style-hover="background:rgba(0,0,0,0.04);">
+              <span style="font-family:'Material Symbols Rounded'; font-size:22px;">more_horiz</span>
+            </button>
+            <sc-if value="{{ showMenu }}" hint-placeholder-val="{{ false }}">
+              <div style="position:absolute; right:0; top:48px; width:230px; background:#fff; border:1px solid var(--border-subtle); border-radius:16px; box-shadow:var(--shadow-pop); padding:8px; z-index:60; animation:pop .16s var(--ease-emphasized);">
+                <button onClick="{{ addList }}" style="width:100%; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:none; background:none; border-radius:10px; cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:14px; color:var(--ws-black);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:20px; color:var(--ws-forest);">playlist_add</span>新增空白清單</button>
+                <button onClick="{{ renameList }}" style="width:100%; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:none; background:none; border-radius:10px; cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:14px; color:var(--ws-black);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:20px; color:var(--ws-forest);">edit_note</span>重新命名此清單</button>
+                <div style="height:1px; background:var(--border-subtle); margin:6px 4px;"></div>
+                <button onClick="{{ importCsvClick }}" style="width:100%; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:none; background:none; border-radius:10px; cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:14px; color:var(--ws-black);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:20px; color:var(--ws-forest);">upload_file</span>匯入 CSV（新清單）</button>
+                <button onClick="{{ exportCsv }}" style="width:100%; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:none; background:none; border-radius:10px; cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:14px; color:var(--ws-black);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:20px; color:var(--ws-forest);">download</span>匯出 CSV</button>
+                <button onClick="{{ exportJson }}" style="width:100%; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:none; background:none; border-radius:10px; cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:14px; color:var(--ws-black);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:20px; color:var(--ws-forest);">data_object</span>匯出 JSON</button>
+                <div style="height:1px; background:var(--border-subtle); margin:6px 4px;"></div>
+                <button onClick="{{ deleteList }}" style="width:100%; text-align:left; display:flex; align-items:center; gap:10px; padding:10px 12px; border:none; background:none; border-radius:10px; cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:14px; color:var(--ws-red);" style-hover="background:rgba(237,53,55,0.08);"><span style="font-family:'Material Symbols Rounded'; font-size:20px;">delete</span>刪除此清單</button>
+              </div>
+            </sc-if>
+          </div>
+          </sc-if>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+        <div style="position:relative; flex:1 1 220px; min-width:180px; max-width:360px;">
+          <span style="font-family:'Material Symbols Rounded'; font-size:20px; position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--ws-dark-gray); pointer-events:none;">search</span>
+          <input value="{{ search }}" onInput="{{ onSearch }}" placeholder="搜尋店名、說明、地址…" style="width:100%; height:42px; padding:0 14px 0 40px; border-radius:999px; border:1.5px solid var(--border-default); background:#fff; font-family:var(--font-body); font-weight:600; font-size:15px; color:var(--ws-black);">
+        </div>
+
+        <div style="display:flex; gap:7px; flex-wrap:wrap; align-items:center;">
+          <sc-for list="{{ typeChips }}" as="c" hint-placeholder-count="4">
+            <button data-value="{{ c.value }}" onClick="{{ onTypeChip }}" style="height:38px; padding:0 15px; display:inline-flex; align-items:center; gap:7px; border-radius:999px; cursor:pointer; font-family:var(--font-display); font-weight:800; font-size:13.5px; border:1.5px solid {{ c.borderColor }}; background:{{ c.bg }}; color:{{ c.fg }}; transition:all .16s;">
+              <span style="font-family:'Material Symbols Rounded'; font-size:18px;">{{ c.icon }}</span>{{ c.label }}<span style="opacity:.7; font-weight:700;">{{ c.count }}</span>
+            </button>
+          </sc-for>
+        </div>
+
+        <div style="flex:1;"></div>
+
+        <div style="display:flex; gap:7px; flex-wrap:wrap; align-items:center;">
+          <select value="{{ areaFilter }}" onChange="{{ onArea }}" style="appearance:none; -webkit-appearance:none; height:40px; padding:0 38px 0 16px; border-radius:999px; border:1.5px solid var(--border-default); background-color:#fff; background-image:var(--sel-chevron); background-repeat:no-repeat; background-position:right 14px center; font-family:var(--font-body); font-weight:700; font-size:13.5px; color:var(--ws-cool-dark); cursor:pointer;">
+            <sc-for list="{{ areaOptions }}" as="o" hint-placeholder-count="1"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <select value="{{ categoryFilter }}" onChange="{{ onCategory }}" style="appearance:none; -webkit-appearance:none; height:40px; padding:0 38px 0 16px; border-radius:999px; border:1.5px solid var(--border-default); background-color:#fff; background-image:var(--sel-chevron); background-repeat:no-repeat; background-position:right 14px center; font-family:var(--font-body); font-weight:700; font-size:13.5px; color:var(--ws-cool-dark); cursor:pointer;">
+            <sc-for list="{{ categoryOptions }}" as="o" hint-placeholder-count="1"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <select value="{{ sourceFilter }}" onChange="{{ onSource }}" style="appearance:none; -webkit-appearance:none; height:40px; padding:0 38px 0 16px; border-radius:999px; border:1.5px solid var(--border-default); background-color:#fff; background-image:var(--sel-chevron); background-repeat:no-repeat; background-position:right 14px center; font-family:var(--font-body); font-weight:700; font-size:13.5px; color:var(--ws-cool-dark); cursor:pointer;">
+            <sc-for list="{{ sourceOptions }}" as="o" hint-placeholder-count="1"><option value="{{ o.value }}">{{ o.label }}</option></sc-for>
+          </select>
+          <select value="{{ sort }}" onChange="{{ onSort }}" style="appearance:none; -webkit-appearance:none; height:40px; padding:0 38px 0 16px; border-radius:999px; border:1.5px solid var(--border-default); background-color:#fff; background-image:var(--sel-chevron); background-repeat:no-repeat; background-position:right 14px center; font-family:var(--font-body); font-weight:700; font-size:13.5px; color:var(--ws-cool-dark); cursor:pointer;">
+            <option value="manual">清單順序</option>
+            <option value="name">依名稱</option>
+            <option value="area">依地區</option>
+            <option value="category">依類別</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main style="flex:1; max-width:1440px; width:100%; margin:0 auto; padding:clamp(14px,2.5vw,28px); display:flex; flex-wrap:wrap; gap:22px; align-items:flex-start;">
+
+    <section style="flex:1 1 440px; min-width:300px; display:flex; flex-direction:column; gap:14px;">
+      <sc-if value="{{ isEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="text-align:center; padding:56px 20px; background:#fff; border-radius:24px; border:1px dashed var(--border-default);">
+          <div style="width:88px; height:88px; border-radius:50%; background:var(--ws-green-mint); display:flex; align-items:center; justify-content:center; margin:0 auto 14px;"><span style="font-family:'Material Symbols Rounded'; font-size:44px; color:var(--ws-green);">map</span></div>
+          <div style="font-family:var(--font-display); font-weight:900; font-size:20px; color:var(--ws-forest);">{{ emptyTitle }}</div>
+          <div style="font-size:14px; color:var(--ws-dark-gray); margin-top:6px;">{{ emptyHint }}</div>
+        </div>
+      </sc-if>
+
+      <sc-for list="{{ visible }}" as="it" hint-placeholder-count="6">
+        <article data-id="{{ it.id }}" onClick="{{ selectCard }}" style="background:#fff; border-radius:18px; border:1.5px solid {{ it.cardBorder }}; box-shadow:var(--shadow-card); padding:16px 18px; cursor:pointer; transition:border-color .16s, transform .12s; position:relative; overflow:hidden;" style-hover="border-color:var(--ws-green);">
+          <div style="position:absolute; left:0; top:0; bottom:0; width:5px; background:{{ it.typeColor }};"></div>
+          <div style="display:flex; gap:12px; align-items:flex-start;">
+            <div style="flex:1; min-width:0;">
+              <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:5px;">
+                <span style="display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:999px; background:{{ it.typeBg }}; color:{{ it.typeFg }}; font-family:var(--font-display); font-weight:800; font-size:12px;"><span style="font-family:'Material Symbols Rounded'; font-size:15px;">{{ it.typeIcon }}</span>{{ it.type }}</span>
+                <sc-if value="{{ it.hasCategory }}" hint-placeholder-val="{{ true }}"><span style="padding:3px 10px; border-radius:999px; background:var(--ws-cool-gray); color:var(--ws-cool-dark); font-family:var(--font-display); font-weight:700; font-size:12px;">{{ it.category }}</span></sc-if>
+                <sc-if value="{{ it.hasArea }}" hint-placeholder-val="{{ true }}"><span style="display:inline-flex; align-items:center; gap:3px; color:var(--ws-dark-gray); font-weight:700; font-size:12px;"><span style="font-family:'Material Symbols Rounded'; font-size:14px;">place</span>{{ it.area }}</span></sc-if>
+              </div>
+              <div style="font-family:var(--font-display); font-weight:800; font-size:18px; line-height:1.25; color:var(--ws-black); word-break:break-word;">{{ it.nameMain }}</div>
+              <sc-if value="{{ it.hasSub }}" hint-placeholder-val="{{ true }}"><div style="font-size:13.5px; font-weight:700; color:var(--ws-forest); margin-top:1px;">{{ it.nameSub }}</div></sc-if>
+            </div>
+            <sc-if value="{{ editMode }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex; flex-direction:column; gap:4px; flex:none;" onClick="{{ stop }}">
+                <button data-id="{{ it.id }}" onClick="{{ openEdit }}" title="編輯" style="width:34px; height:34px; border-radius:9px; border:1px solid var(--border-default); background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ws-cool-dark);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:19px;">edit</span></button>
+                <button data-id="{{ it.id }}" onClick="{{ onDelete }}" title="刪除" style="width:34px; height:34px; border-radius:9px; border:1px solid var(--border-default); background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ws-red);" style-hover="background:rgba(237,53,55,0.08);"><span style="font-family:'Material Symbols Rounded'; font-size:19px;">delete</span></button>
+                <sc-if value="{{ canReorder }}" hint-placeholder-val="{{ false }}">
+                  <button data-id="{{ it.id }}" onClick="{{ moveUp }}" title="上移" style="width:34px; height:26px; border-radius:9px; border:1px solid var(--border-default); background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ws-cool-dark);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:18px;">arrow_upward</span></button>
+                </sc-if>
+                <sc-if value="{{ canReorder }}" hint-placeholder-val="{{ false }}">
+                  <button data-id="{{ it.id }}" onClick="{{ moveDown }}" title="下移" style="width:34px; height:26px; border-radius:9px; border:1px solid var(--border-default); background:#fff; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ws-cool-dark);" style-hover="background:var(--ws-green-mint);"><span style="font-family:'Material Symbols Rounded'; font-size:18px;">arrow_downward</span></button>
+                </sc-if>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ it.hasDesc }}" hint-placeholder-val="{{ true }}">
+            <div style="margin-top:9px; font-size:14.5px; line-height:1.55; color:var(--ws-cool-dark); white-space:pre-line; word-break:break-word;">{{ it.desc }}</div>
+          </sc-if>
+
+          <div style="margin-top:11px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;" onClick="{{ stop }}">
+            <sc-if value="{{ it.hasKr }}" hint-placeholder-val="{{ true }}">
+              <button data-addr="{{ it.addrKr }}" onClick="{{ copyAddr }}" title="複製韓文地址" style="display:inline-flex; align-items:center; gap:6px; max-width:100%; padding:6px 12px; border-radius:10px; border:1px solid var(--border-subtle); background:var(--ws-cool-gray); cursor:pointer; font-family:var(--font-body); font-weight:700; font-size:12.5px; color:var(--ws-cool-dark);" style-hover="background:var(--ws-green-mint);">
+                <span style="font-family:'Material Symbols Rounded'; font-size:16px; color:var(--ws-forest); flex:none;">content_copy</span>
+                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ it.addrKr }}</span>
+              </button>
+            </sc-if>
+            <a href="{{ it.mapsUrl }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:10px; background:var(--ws-green-mint); color:var(--ws-forest); text-decoration:none; font-family:var(--font-display); font-weight:800; font-size:12.5px;" style-hover="background:var(--ws-green-light);"><span style="font-family:'Material Symbols Rounded'; font-size:16px;">near_me</span>地圖導航</a>
+            <sc-if value="{{ it.hasSrcUrl }}" hint-placeholder-val="{{ false }}">
+              <a href="{{ it.source }}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:10px; background:#fff; border:1px solid var(--border-subtle); color:var(--ws-blue); text-decoration:none; font-family:var(--font-display); font-weight:800; font-size:12.5px;"><span style="font-family:'Material Symbols Rounded'; font-size:16px;">link</span>來源連結</a>
+            </sc-if>
+            <sc-if value="{{ it.hasSrcText }}" hint-placeholder-val="{{ false }}">
+              <span style="display:inline-flex; align-items:center; gap:4px; color:var(--ws-dark-gray); font-weight:700; font-size:12px;"><span style="font-family:'Material Symbols Rounded'; font-size:15px;">sell</span>{{ it.source }}</span>
+            </sc-if>
+          </div>
+        </article>
+      </sc-for>
+    </section>
+
+    <aside style="flex:1 1 360px; min-width:280px; position:sticky; top:150px; align-self:flex-start;">
+      <div ref="{{ mapRef }}" style="width:100%; height:clamp(340px, calc(100vh - 190px), 860px); border-radius:20px; border:1px solid var(--border-subtle); box-shadow:var(--shadow-card); background:var(--ws-cool-gray); overflow:hidden;"></div>
+      <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:10px; padding:0 4px; font-size:12px; font-weight:700; color:var(--ws-dark-gray);">
+        <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:11px; height:11px; border-radius:50%; background:#EC6A52;"></span>美食</span>
+        <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:11px; height:11px; border-radius:50%; background:#D99A2B;"></span>咖啡甜點</span>
+        <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:11px; height:11px; border-radius:50%; background:#2FAE9A;"></span>景點</span>
+        <span style="display:inline-flex; align-items:center; gap:5px;"><span style="width:11px; height:11px; border-radius:50%; background:#7E8AD6;"></span>商店</span>
+      </div>
+    </aside>
+  </main>
+
+  <input ref="{{ fileRef }}" type="file" accept=".csv,text/csv" onChange="{{ onImportFile }}" style="display:none;">
+
+  <sc-if value="{{ showForm }}" hint-placeholder-val="{{ false }}">
+    <div onClick="{{ closeForm }}" style="position:fixed; inset:0; z-index:80; background:rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; padding:16px;">
+      <div onClick="{{ stop }}" style="background:#fff; width:100%; max-width:560px; max-height:92vh; overflow:auto; border-radius:24px; padding:22px clamp(16px,4vw,28px) 26px; animation:pop .2s var(--ease-emphasized); box-shadow:var(--shadow-pop);">
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+          <div style="font-family:var(--font-display); font-weight:900; font-size:22px; color:var(--ws-black);">{{ formTitle }}</div>
+          <button onClick="{{ closeForm }}" style="width:38px; height:38px; border-radius:999px; border:none; background:var(--ws-cool-gray); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; color:var(--ws-cool-dark);" style-hover="background:rgba(0,0,0,0.08);"><span style="font-family:'Material Symbols Rounded'; font-size:22px;">close</span></button>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:14px;">
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">名稱（可含韓文）</span>
+            <input data-field="name" value="{{ form.name }}" onInput="{{ onFormInput }}" placeholder="例如：嚴湧帛豬肉湯飯 (엄용백돼지국밥)" style="height:46px; padding:0 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-body); font-weight:600; font-size:15px;">
+          </label>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <label style="display:flex; flex-direction:column; gap:6px; flex:1 1 150px;">
+              <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">大分類</span>
+              <select data-field="type" value="{{ form.type }}" onChange="{{ onFormInput }}" style="height:46px; padding:0 12px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-body); font-weight:700; font-size:15px; background:#fff;">
+                <sc-for list="{{ typeSelect }}" as="t" hint-placeholder-count="4"><option value="{{ t }}">{{ t }}</option></sc-for>
+              </select>
+            </label>
+            <label style="display:flex; flex-direction:column; gap:6px; flex:1 1 150px;">
+              <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">類別標籤</span>
+              <input data-field="category" value="{{ form.category }}" onInput="{{ onFormInput }}" placeholder="豬肉湯飯 / 咖啡…" style="height:46px; padding:0 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-body); font-weight:600; font-size:15px;">
+            </label>
+            <label style="display:flex; flex-direction:column; gap:6px; flex:1 1 150px;">
+              <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">地區</span>
+              <input data-field="area" value="{{ form.area }}" onInput="{{ onFormInput }}" placeholder="海雲台 / 西面…" style="height:46px; padding:0 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-body); font-weight:600; font-size:15px;">
+            </label>
+          </div>
+
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">說明 / 推薦重點</span>
+            <textarea data-field="desc" value="{{ form.desc }}" onInput="{{ onFormInput }}" rows="4" placeholder="這間的招牌、CP值、一人友善…" style="padding:12px 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-body); font-weight:600; font-size:15px; line-height:1.5; resize:vertical;"></textarea>
+          </label>
+
+          <label style="display:flex; flex-direction:column; gap:6px;">
+            <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">韓文地址</span>
+            <input data-field="addrKr" value="{{ form.addrKr }}" onInput="{{ onFormInput }}" placeholder="부산 해운대구…" style="height:46px; padding:0 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-body); font-weight:600; font-size:15px;">
+          </label>
+
+          <div style="display:flex; gap:12px; flex-wrap:wrap;">
+            <label style="display:flex; flex-direction:column; gap:6px; flex:1 1 130px;">
+              <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">來源</span>
+              <input data-field="source" value="{{ form.source }}" onInput="{{ onFormInput }}" placeholder="金導遊 / IG / 網址" style="height:46px; padding:0 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-body); font-weight:600; font-size:15px;">
+            </label>
+            <label style="display:flex; flex-direction:column; gap:6px; flex:1 1 100px;">
+              <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">緯度 lat</span>
+              <input data-field="lat" value="{{ form.lat }}" onInput="{{ onFormInput }}" placeholder="35.1607" inputmode="decimal" style="height:46px; padding:0 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-mono); font-weight:600; font-size:14px;">
+            </label>
+            <label style="display:flex; flex-direction:column; gap:6px; flex:1 1 100px;">
+              <span style="font-family:var(--font-display); font-weight:800; font-size:12px; letter-spacing:0.04em; text-transform:uppercase; color:var(--ws-dark-gray);">經度 lng</span>
+              <input data-field="lng" value="{{ form.lng }}" onInput="{{ onFormInput }}" placeholder="129.1585" inputmode="decimal" style="height:46px; padding:0 14px; border-radius:12px; border:1.5px solid var(--border-default); font-family:var(--font-mono); font-weight:600; font-size:14px;">
+            </label>
+          </div>
+          <div style="font-size:12px; color:var(--ws-dark-gray); font-weight:600; margin-top:-4px;">留白也沒關係，有座標才會顯示在地圖上。</div>
+
+          <div style="display:flex; gap:10px; margin-top:8px;">
+            <button onClick="{{ closeForm }}" style="flex:0 0 auto; height:50px; padding:0 22px; border-radius:14px; border:1.5px solid var(--border-default); background:#fff; cursor:pointer; font-family:var(--font-display); font-weight:800; font-size:15px; color:var(--ws-cool-dark);">取消</button>
+            <button onClick="{{ saveForm }}" style="flex:1; height:50px; border-radius:14px; border:none; background:var(--ws-green); color:#fff; cursor:pointer; font-family:var(--font-display); font-weight:900; font-size:16px;" style-hover="background:var(--ws-forest);" style-active="transform:scale(0.99);">{{ saveLabel }}</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900},&quot;ownerCode&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;1234&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;編輯權限&quot;}}">
+class Component extends DCLogic {
+  constructor(props){
+    super(props);
+    this.STORE = 'travel_lists_v1';
+    this.TYPES = ['美食','咖啡甜點','景點','商店'];
+    this.TYPE_META = {
+      '美食':      { color:'#EC6A52', bg:'#FBE3DC', fg:'#B23E29', icon:'restaurant' },
+      '咖啡甜點':  { color:'#D99A2B', bg:'#F7EACF', fg:'#8A5E12', icon:'local_cafe' },
+      '景點':      { color:'#2FAE9A', bg:'#D6F0EA', fg:'#1B6E61', icon:'photo_camera' },
+      '商店':      { color:'#7E8AD6', bg:'#E6E8F8', fg:'#464F9E', icon:'shopping_bag' },
+    };
+    this.mapRef = React.createRef();
+    this.fileRef = React.createRef();
+    this.map = null;
+    this.layer = null;
+    this.markers = {};
+    this._lastSig = '';
+
+    const loaded = this.load();
+    let unlocked=false; try{ unlocked = localStorage.getItem('travel_unlock')===this.ownerCode(); }catch(e){}
+    this.state = {
+      lists: loaded.lists,
+      activeListId: loaded.activeListId,
+      search:'', typeFilter:'全部', categoryFilter:'全部', areaFilter:'全部', sourceFilter:'全部',
+      sort:'manual', editMode:false, showMenu:false, unlocked,
+      showForm:false, editingId:null, form:this.blankForm(),
+    };
+  }
+
+  /* ---------- data / persistence ---------- */
+  uid(){ return 'x'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4); }
+  blankForm(){ return { name:'', type:'美食', category:'', area:'', desc:'', addrKr:'', source:'', lat:'', lng:'' }; }
+
+  seed(){
+    const T=(name,type,category,area,addrKr,desc,source,lat,lng)=>({id:this.uid(),name,type,category,area,addrZh:'',addrKr,desc,source,lat,lng});
+    const items=[
+      T('嚴湧帛豬肉湯飯海雲台店 (엄용백돼지국밥)','美食','豬肉湯飯','海雲台','부산 수영구 수영로680번길 39','[豬肉湯飯界愛馬仕] 傳統湯飯的顛覆者。極致清澈的釜山式清湯派頂點，肉片切得薄如法式料理。裝潢為高質感韓屋，質感極佳。','金導遊',35.1607506,129.1585312),
+      T('柳家鐵板雞排 (유가네닭갈비 해운대점)','美食','炒雞','海雲台','','全韓國最大的辣炒雞連鎖餐廳\n《沒關係，是愛情啊》曾在此取景','谷歌',35.1620835,129.1597925),
+      T('巍然醒酒馬鈴薯排骨湯 海雲台店 (우뚝해장국감자탕 해운대본점)','美食','馬鈴薯排骨湯','海雲台','부산 해운대구 구남로 25','一人友善','https://alinalife.tw/woodduk/',35.1619037,129.1606834),
+      T('味贊王鹽烤肉 海雲台店 (맛찬들왕소금구이 해운대점)','美食','韓式烤肉','海雲台','','常看到的推薦，多間連鎖店，有代烤服務','IG + 金導遊',35.1610437,129.1590339),
+      T('伍班長烤肉 (오반장)','美食','韓式烤肉','海雲台','부산광역시 해운대구 우1동 구남로24번길 20','室內味道較重，可以坐戶外，一人可用餐需點滿 3 份肉，CP 值高，蒸蛋要點','IG',35.1615099,129.1591675),
+      T('水邊最高豬肉湯飯 (수변최고돼지국밥)','美食','豬肉湯飯','海雲台','부산 수영구 광안해변로370번길 9-32','[廣安里深夜救贖] 廣安里在地人與遊客公認的前三名湯飯！招牌杭政肉（豬頸肉）湯飯爽脆肥美，湯頭極度濃白，24小時營業。','金導遊',35.1592044,129.1705986),
+      T('春夏秋冬 小麥冷麵｜CC 推薦','美食','小麥冷麵','海雲台','','CC 推薦的小麥冷麵，西面也有店','CC',35.1607303,129.16085),
+      T('巨松燉排骨 海雲台店','美食','辣燉排骨','海雲台','부산 해운대구 달맞이길62번길 17 2층','大邱開來的，品相沒有大邱多，可以選完全不辣的','IG',35.1596968,129.1707231),
+      T('뫼밀집 moemiljip','美食','冷麵','海雲台','부산광역시 해운대구 마린시티3로 23, 오렌지프라자 2층','2026 年米其林餐盤。蕎麥麵專賣店（高人氣香辣拌麵、紫蘇油冷麵）。紫蘇油冷麵走清新路線，香氣細緻且耐吃。','IG',35.1566385,129.1469545),
+      T('超一肉 海雲台總店 (초일육 해운대본점)','美食','韓式烤肉','海雲台','부산 해운대구 구남로8번길 2 2F','豬、韓牛都有：當地以「豬肉」和「韓牛」都很厲害聞名，深受釜山在地人歡迎的排隊名店。全程代烤服務。','單單',35.1617053,129.1564519),
+      T('Standard Bread','咖啡甜點','麵包','海雲台','','首爾開到釜山來，台北現在也有店','IG',35.161337,129.1540882),
+      T('Liberta','咖啡甜點','海景咖啡','海雲台','','','',35.160891,129.1934966),
+      T('풍원장 꼬막정찬','美食','海鮮','海雲台','','血蚶（꼬막）定食專門店','',35.1549902,129.1425554),
+      T('CORALANI','咖啡甜點','咖啡','松亭','','海景咖啡廳','',35.1824072,129.2088791),
+      T('海雲台31公分海鮮刀切麵','美食','刀切麵','海雲台','','招牌超大份海鮮刀切麵','',35.181625,129.200158),
+      T("Who's Who MUMU Bakery｜后스후무무",'咖啡甜點','麵包','海雲台','','人氣麵包店','',35.1607187,129.1714236),
+      T('Momos Coffee','咖啡甜點','咖啡','','','世界咖啡冠軍烘豆品牌','',35.1544957,129.1443344),
+      T('카페 윤 CAFE YOON','咖啡甜點','咖啡','松亭','','','',35.1819187,129.2112746),
+      T('Millchango','咖啡甜點','麵包','海雲台','','','',35.1655785,129.15767),
+    ];
+    return items;
+  }
+
+  load(){
+    try{
+      const raw = localStorage.getItem(this.STORE);
+      if(raw){ const d=JSON.parse(raw); if(d && d.lists && d.lists.length) return d; }
+    }catch(e){}
+    const id='seed-busan';
+    return { lists:[{ id, name:'釜山・海雲台 美食', items:this.seed() }], activeListId:id };
+  }
+  save(){
+    try{ localStorage.setItem(this.STORE, JSON.stringify({ lists:this.state.lists, activeListId:this.state.activeListId })); }catch(e){}
+  }
+
+  activeList(){ return this.state.lists.find(l=>l.id===this.state.activeListId) || this.state.lists[0]; }
+  setActiveItems(items){
+    this.setState(s=>({ lists: s.lists.map(l=> l.id===s.activeListId ? {...l, items} : l ) }));
+  }
+
+  /* ---------- lifecycle ---------- */
+  componentDidMount(){
+    this._poll = setInterval(()=>{ if(window.L){ clearInterval(this._poll); this.initMap(); } }, 60);
+    document.addEventListener('mousedown', this.onDocDown);
+  }
+  componentWillUnmount(){
+    clearInterval(this._poll);
+    document.removeEventListener('mousedown', this.onDocDown);
+  }
+  onDocDown = (e)=>{ if(this.state.showMenu){ this.setState({showMenu:false}); } };
+
+  componentDidUpdate(){ this.save(); this.syncMarkers(); }
+
+  initMap(){
+    const el = this.mapRef.current; if(!el || this.map) return;
+    this.map = L.map(el, { zoomControl:true, attributionControl:true, scrollWheelZoom:true });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+      maxZoom:19, attribution:'© OpenStreetMap © CARTO'
+    }).addTo(this.map);
+    this.layer = L.layerGroup().addTo(this.map);
+    this.map.setView([35.163, 129.163], 13);
+    this._lastSig='';
+    this.syncMarkers(true);
+  }
+
+  syncMarkers(force){
+    if(!this.map || !window.L) return;
+    const vis = this.getVisible();
+    const pts = vis.filter(v=>v.hasCoords);
+    const sig = pts.map(p=>p.id).join('|');
+    if(!force && sig===this._lastSig) return;
+    this._lastSig = sig;
+    this.layer.clearLayers(); this.markers={};
+    const bounds=[];
+    pts.forEach(p=>{
+      const m = L.circleMarker([p.lat, p.lng], {
+        radius:8, weight:3, color:'#fff', fillColor:p.typeColor, fillOpacity:1
+      });
+      m.bindPopup('<b style="font-size:14px">'+this.esc(p.nameMain)+'</b>'+(p.nameSub?'<br><span style="color:#077535;font-weight:700;font-size:12px">'+this.esc(p.nameSub)+'</span>':'')+(p.category?'<br><span style="color:#6E6C6C;font-size:12px">'+this.esc(p.category)+'</span>':''));
+      m.on('click', ()=> this.setState({}) );
+      m.addTo(this.layer);
+      this.markers[p.id]=m;
+      bounds.push([p.lat,p.lng]);
+    });
+    if(force && bounds.length){ try{ this.map.fitBounds(bounds, {padding:[40,40], maxZoom:15}); }catch(e){} }
+  }
+  esc(s){ return String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+  /* ---------- derive display ---------- */
+  splitName(name){
+    const m = String(name||'').match(/^(.*?)[\(（]([^)）]+)[\)）]\s*$/);
+    if(m && m[1].trim()) return { main:m[1].trim(), sub:m[2].trim() };
+    return { main:String(name||'').trim(), sub:'' };
+  }
+  mapsUrl(it){
+    const q = it.addrKr ? it.addrKr : (it.lat!=null && it.lng!=null && it.lat!=='' ? (it.lat+','+it.lng) : this.splitName(it.name).main);
+    return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q);
+  }
+  enrich(it){
+    const meta = this.TYPE_META[it.type] || this.TYPE_META['美食'];
+    const nm = this.splitName(it.name);
+    const lat = (it.lat===''||it.lat==null)?null:Number(it.lat);
+    const lng = (it.lng===''||it.lng==null)?null:Number(it.lng);
+    const hasCoords = lat!=null && lng!=null && !isNaN(lat) && !isNaN(lng);
+    const src = (it.source||'').trim();
+    const isUrl = /^https?:\/\//i.test(src);
+    return {
+      id:it.id, type:it.type, typeColor:meta.color, typeBg:meta.bg, typeFg:meta.fg, typeIcon:meta.icon,
+      cardBorder: 'var(--border-subtle)',
+      nameMain:nm.main, nameSub:nm.sub, hasSub:!!nm.sub,
+      category:it.category||'', hasCategory:!!(it.category&&it.category.trim()),
+      area:it.area||'', hasArea:!!(it.area&&it.area.trim()),
+      desc:it.desc||'', hasDesc:!!(it.desc&&it.desc.trim()),
+      addrKr:it.addrKr||'', hasKr:!!(it.addrKr&&it.addrKr.trim()),
+      source:src, hasSrcUrl:isUrl, hasSrcText:!!src && !isUrl,
+      lat:hasCoords?lat:null, lng:hasCoords?lng:null, hasCoords,
+      mapsUrl:this.mapsUrl(it),
+    };
+  }
+  getVisible(){
+    const s=this.state; const list=this.activeList(); if(!list) return [];
+    const q=s.search.trim().toLowerCase();
+    let arr=list.items.filter(it=>{
+      if(s.typeFilter!=='全部' && it.type!==s.typeFilter) return false;
+      if(s.categoryFilter!=='全部' && (it.category||'')!==s.categoryFilter) return false;
+      if(s.areaFilter!=='全部' && (it.area||'')!==s.areaFilter) return false;
+      if(s.sourceFilter!=='全部' && (it.source||'')!==s.sourceFilter) return false;
+      if(q){ const hay=((it.name||'')+' '+(it.desc||'')+' '+(it.addrKr||'')+' '+(it.category||'')).toLowerCase(); if(!hay.includes(q)) return false; }
+      return true;
+    });
+    if(s.sort==='name') arr=[...arr].sort((a,b)=>this.splitName(a.name).main.localeCompare(this.splitName(b.name).main,'zh-Hant'));
+    else if(s.sort==='area') arr=[...arr].sort((a,b)=>(a.area||'').localeCompare(b.area||'','zh-Hant'));
+    else if(s.sort==='category') arr=[...arr].sort((a,b)=>(a.category||'').localeCompare(b.category||'','zh-Hant'));
+    return arr.map(it=>this.enrich(it));
+  }
+
+  uniq(getter){
+    const list=this.activeList(); if(!list) return [];
+    const set=[]; list.items.forEach(it=>{ const v=(getter(it)||'').trim(); if(v && !set.includes(v)) set.push(v); });
+    return set;
+  }
+
+  /* ---------- handlers ---------- */
+  onSearch = e => this.setState({search:e.target.value});
+  onTypeChip = e => { const v=e.currentTarget.dataset.value; this.setState({typeFilter:v}); };
+  onCategory = e => this.setState({categoryFilter:e.target.value});
+  onArea = e => this.setState({areaFilter:e.target.value});
+  onSource = e => this.setState({sourceFilter:e.target.value});
+  onSort = e => this.setState({sort:e.target.value});
+  ownerCode(){ const p=this.props.ownerCode; return (p!=null && String(p).trim()!=='')?String(p):'1234'; }
+  unlock = () => { const oc=this.ownerCode(); const v=prompt('請輸入編輯密碼（僅擁有者可編輯，別人只能檢視）：'); if(v===null) return; if(v===oc){ try{localStorage.setItem('travel_unlock',oc);}catch(e){} this.setState({unlocked:true}); } else { alert('密碼錯誤，無法進入編輯模式'); } };
+  lock = () => { try{localStorage.setItem('travel_unlock','');}catch(e){} this.setState({unlocked:false, editMode:false, showMenu:false, showForm:false}); };
+  toggleEdit = () => { if(!this.state.unlocked) return; this.setState(s=>({editMode:!s.editMode})); };
+  toggleMenu = e => { e.stopPropagation(); this.setState(s=>({showMenu:!s.showMenu})); };
+  stop = e => e.stopPropagation();
+
+  selectCard = e => {
+    const id=e.currentTarget.dataset.id; const m=this.markers[id];
+    if(m && this.map){ this.map.setView(m.getLatLng(), Math.max(this.map.getZoom(),15), {animate:true}); m.openPopup(); }
+  };
+
+  openAdd = () => this.setState({showForm:true, editingId:null, form:this.blankForm(), showMenu:false});
+  openEdit = e => {
+    const id=e.currentTarget.dataset.id; const it=this.activeList().items.find(x=>x.id===id); if(!it) return;
+    this.setState({ showForm:true, editingId:id, form:{
+      name:it.name||'', type:it.type||'美食', category:it.category||'', area:it.area||'',
+      desc:it.desc||'', addrKr:it.addrKr||'', source:it.source||'',
+      lat:(it.lat==null?'':String(it.lat)), lng:(it.lng==null?'':String(it.lng)),
+    }});
+  };
+  closeForm = () => this.setState({showForm:false});
+  onFormInput = e => { const f=e.target.dataset.field; const v=e.target.value; this.setState(s=>({form:{...s.form,[f]:v}})); };
+  saveForm = () => {
+    const f=this.state.form;
+    if(!f.name.trim()){ alert('請至少輸入名稱'); return; }
+    const rec = {
+      name:f.name.trim(), type:f.type||'美食', category:f.category.trim(), area:f.area.trim(),
+      addrZh:'', addrKr:f.addrKr.trim(), desc:f.desc, source:f.source.trim(),
+      lat:f.lat.trim()===''?null:Number(f.lat), lng:f.lng.trim()===''?null:Number(f.lng),
+    };
+    const items=[...this.activeList().items];
+    if(this.state.editingId){
+      const i=items.findIndex(x=>x.id===this.state.editingId);
+      if(i>=0) items[i]={...items[i],...rec};
+    } else {
+      items.push({id:this.uid(),...rec});
+    }
+    this._lastSig='';
+    this.setActiveItems(items);
+    this.setState({showForm:false});
+  };
+  onDelete = e => {
+    const id=e.currentTarget.dataset.id; const it=this.activeList().items.find(x=>x.id===id);
+    if(!it) return;
+    if(!confirm('確定刪除「'+this.splitName(it.name).main+'」？')) return;
+    this._lastSig='';
+    this.setActiveItems(this.activeList().items.filter(x=>x.id!==id));
+  };
+  moveUp = e => this.moveBy(e.currentTarget.dataset.id,-1);
+  moveDown = e => this.moveBy(e.currentTarget.dataset.id,1);
+  moveBy(id,d){
+    const items=[...this.activeList().items];
+    const i=items.findIndex(x=>x.id===id); const j=i+d;
+    if(i<0||j<0||j>=items.length) return;
+    [items[i],items[j]]=[items[j],items[i]];
+    this._lastSig='';
+    this.setActiveItems(items);
+  }
+
+  /* ---------- list management ---------- */
+  onListChange = e => { this._lastSig=''; this.setState({activeListId:e.target.value}, ()=>this.refit()); };
+  refit(){ this.syncMarkers(true); }
+  addList = () => {
+    const name=prompt('新清單名稱：','新的清單'); if(name===null) return;
+    const id=this.uid();
+    this.setState(s=>({ lists:[...s.lists,{id,name:name.trim()||'未命名清單',items:[]}], activeListId:id, showMenu:false }), ()=>this.refit());
+  };
+  renameList = () => {
+    const l=this.activeList(); const name=prompt('清單名稱：',l.name); if(name===null) return;
+    this.setState(s=>({ lists:s.lists.map(x=>x.id===l.id?{...x,name:name.trim()||x.name}:x), showMenu:false }));
+  };
+  deleteList = () => {
+    if(this.state.lists.length<=1){ alert('至少要保留一個清單'); this.setState({showMenu:false}); return; }
+    const l=this.activeList();
+    if(!confirm('刪除整個清單「'+l.name+'」？此動作無法復原。')) return;
+    this.setState(s=>{ const lists=s.lists.filter(x=>x.id!==l.id); return {lists, activeListId:lists[0].id, showMenu:false}; }, ()=>{this._lastSig='';this.refit();});
+  };
+
+  /* ---------- import / export ---------- */
+  importCsvClick = () => { this.setState({showMenu:false}); if(this.fileRef.current) this.fileRef.current.click(); };
+  onImportFile = e => {
+    const file=e.target.files && e.target.files[0]; if(!file) return;
+    const reader=new FileReader();
+    reader.onload = () => {
+      try{
+        const items=this.parseCSV(String(reader.result));
+        if(!items.length){ alert('沒有讀到資料'); return; }
+        const id=this.uid();
+        const name=file.name.replace(/\.csv$/i,'').slice(0,40)||'匯入的清單';
+        this.setState(s=>({lists:[...s.lists,{id,name,items}],activeListId:id}),()=>{this._lastSig='';this.refit();});
+      }catch(err){ alert('匯入失敗：'+err.message); }
+    };
+    reader.readAsText(file,'utf-8');
+    e.target.value='';
+  };
+  parseCSV(text){
+    const rows=[]; let cur=[],field='',i=0,inQ=false;
+    while(i<text.length){ const c=text[i];
+      if(inQ){ if(c==='"'){ if(text[i+1]==='"'){field+='"';i+=2;continue;} inQ=false;i++;continue;} field+=c;i++;continue; }
+      if(c==='"'){inQ=true;i++;continue;}
+      if(c===','){cur.push(field);field='';i++;continue;}
+      if(c==='\r'){i++;continue;}
+      if(c==='\n'){cur.push(field);rows.push(cur);cur=[];field='';i++;continue;}
+      field+=c;i++;
+    }
+    if(field.length||cur.length){cur.push(field);rows.push(cur);}
+    const clean=rows.filter(r=>r.some(c=>c&&c.trim()));
+    if(!clean.length) return [];
+    const head=clean[0].map(h=>h.trim());
+    const col=(names)=>{ for(const n of names){ const idx=head.findIndex(h=>h.includes(n)); if(idx>=0) return idx; } return -1; };
+    const ci={ wkt:col(['WKT','wkt']), name:col(['名稱','名字','店名','name']), cat:col(['類別','分類']), area:col(['地區','區域']),
+      zh:col(['地址 (中文)','中文']), kr:col(['韓文','韓國']), desc:col(['說明','備註','描述']), src:col(['來源','出處']) };
+    const out=[];
+    for(let r=1;r<clean.length;r++){ const row=clean[r]; const g=i=> i>=0&&i<row.length?(row[i]||'').trim():'';
+      const wkt=g(ci.wkt); const m=wkt.match(/POINT\s*\(([-\d.]+)\s+([-\d.]+)\)/i);
+      const name=g(ci.name); if(!name) continue;
+      out.push({ id:this.uid(), name, type:'美食', category:g(ci.cat), area:g(ci.area), addrZh:g(ci.zh), addrKr:g(ci.kr), desc:g(ci.desc), source:g(ci.src),
+        lat:m?Number(m[2]):null, lng:m?Number(m[1]):null });
+    }
+    return out;
+  }
+  download(name,text,type){
+    const blob=new Blob([text],{type}); const url=URL.createObjectURL(blob);
+    const a=document.createElement('a'); a.href=url; a.download=name; document.body.appendChild(a); a.click();
+    setTimeout(()=>{document.body.removeChild(a);URL.revokeObjectURL(url);},100);
+  }
+  csvCell(v){ v=v==null?'':String(v); return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v; }
+  exportCsv = () => {
+    const l=this.activeList();
+    const head=['WKT','名稱','類別','地區','地址 (中文)','韓文地址','說明','來源'];
+    const lines=[head.join(',')];
+    l.items.forEach(it=>{
+      const wkt=(it.lng!=null&&it.lat!=null&&it.lng!==''&&it.lat!=='')?('POINT ('+it.lng+' '+it.lat+')'):'';
+      lines.push([wkt,it.name,it.category,it.area,it.addrZh||'',it.addrKr,it.desc,it.source].map(c=>this.csvCell(c)).join(','));
+    });
+    this.download((l.name||'list')+'.csv','\ufeff'+lines.join('\n'),'text/csv;charset=utf-8');
+    this.setState({showMenu:false});
+  };
+  exportJson = () => {
+    const l=this.activeList();
+    this.download((l.name||'list')+'.json', JSON.stringify(l,null,2),'application/json');
+    this.setState({showMenu:false});
+  };
+
+  /* ---------- render values ---------- */
+  renderVals(){
+    const s=this.state; const list=this.activeList();
+    const visible=this.getVisible();
+    const total=list?list.items.length:0;
+    const chips=[{value:'全部',label:'全部',icon:'apps',count:total}].concat(this.TYPES.map(t=>{
+      const meta=this.TYPE_META[t];
+      return { value:t, label:t, icon:meta.icon, count:list?list.items.filter(i=>i.type===t).length:0,
+        _color:meta.color, _bg:meta.bg, _fg:meta.fg };
+    })).map(c=>{
+      const active = s.typeFilter===c.value;
+      const meta = c.value==='全部' ? {color:'#EC6A52',bg:'#EC6A52',fg:'#fff'} : {color:c._color,bg:c._bg,fg:c._fg};
+      return { value:c.value, label:c.label, icon:c.icon, count:c.count,
+        bg: active ? meta.color : '#fff',
+        fg: active ? '#fff' : 'var(--ws-cool-dark)',
+        borderColor: active ? meta.color : 'var(--border-default)' };
+    });
+
+    const optList=(vals,allLabel)=>[{value:'全部',label:allLabel}].concat(vals.map(v=>({value:v,label:v})));
+
+    return {
+      listName: list?list.name:'',
+      countLabel: (visible.length===total? total+' 個地點' : visible.length+' / '+total+' 個地點'),
+      countLabelPlain: total,
+      lists: s.lists.map(l=>({id:l.id,name:l.name})),
+      activeListId: s.activeListId,
+      visible,
+      isEmpty: visible.length===0,
+      emptyTitle: total===0 ? '這個清單還是空的' : '找不到符合的地點',
+      emptyHint: total===0 ? '點右上角「新增」加入第一個地點吧！' : '試試調整搜尋或篩選條件。',
+      typeChips: chips,
+      areaOptions: optList(this.uniq(it=>it.area),'全部地區'),
+      categoryOptions: optList(this.uniq(it=>it.category),'全部類別'),
+      sourceOptions: optList(this.uniq(it=>it.source),'全部來源'),
+      areaFilter:s.areaFilter, categoryFilter:s.categoryFilter, sourceFilter:s.sourceFilter,
+      search:s.search, sort:s.sort,
+      editMode: s.unlocked && s.editMode,
+      unlocked: s.unlocked, locked: !s.unlocked,
+      unlock:this.unlock, lock:this.lock,
+      canReorder: s.sort==='manual' && s.typeFilter==='全部' && s.categoryFilter==='全部' && s.areaFilter==='全部' && s.sourceFilter==='全部' && !s.search.trim(),
+      editIcon: s.editMode?'check':'edit',
+      editBtnLabel: s.editMode?'完成':'編輯',
+      editBtnBg: s.editMode?'var(--ws-forest)':'var(--ws-green-mint)',
+      editBtnFg: s.editMode?'#fff':'var(--ws-forest)',
+      showMenu:s.showMenu,
+      showForm:s.showForm,
+      formTitle: s.editingId?'編輯地點':'新增地點',
+      saveLabel: s.editingId?'儲存變更':'加入清單',
+      form:s.form,
+      typeSelect:this.TYPES,
+      mapRef:this.mapRef, fileRef:this.fileRef,
+      // handlers
+      onSearch:this.onSearch, onTypeChip:this.onTypeChip, onCategory:this.onCategory, onArea:this.onArea, onSource:this.onSource, onSort:this.onSort,
+      toggleEdit:this.toggleEdit, openAdd:this.openAdd, openEdit:this.openEdit, onDelete:this.onDelete, moveUp:this.moveUp, moveDown:this.moveDown,
+      selectCard:this.selectCard, toggleMenu:this.toggleMenu, stop:this.stop,
+      onListChange:this.onListChange, addList:this.addList, renameList:this.renameList, deleteList:this.deleteList,
+      importCsvClick:this.importCsvClick, onImportFile:this.onImportFile, exportCsv:this.exportCsv, exportJson:this.exportJson,
+      onFormInput:this.onFormInput, saveForm:this.saveForm, closeForm:this.closeForm, copyAddr:this.copyAddr,
+    };
+  }
+
+  copyAddr = e => {
+    e.stopPropagation();
+    const addr=e.currentTarget.dataset.addr; if(!addr) return;
+    const btn=e.currentTarget;
+    const done=()=>{ const label=btn.querySelector('span:last-child'); if(label){ const old=label.textContent; label.textContent='已複製 ✓'; setTimeout(()=>{label.textContent=old;},1200);} };
+    if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(addr).then(done).catch(done); }
+    else { const t=document.createElement('textarea'); t.value=addr; document.body.appendChild(t); t.select(); try{document.execCommand('copy');}catch(err){} document.body.removeChild(t); done(); }
+  };
+}
+</script>
+</body>
+</html>
